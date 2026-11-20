@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KORA STREAM - بث مباشر للمباريات</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="bg-slate-950 text-white min-h-screen font-sans">
+  <header class="bg-slate-900/90 border-b border-slate-800 sticky top-0 z-50 backdrop-blur">
+    <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <span class="w-3 h-3 rounded-full bg-red-500 animate-pulse"></span>
+        <h1 class="text-xl font-black tracking-tight text-emerald-400">KORA STREAM</h1>
+      </div>
+      <span id="live-count" class="text-xs bg-slate-800 px-3 py-1 rounded-full text-slate-300">جاري التحميل...</span>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto px-4 py-5 space-y-5">
+    <!-- Video Player Section -->
+    <section id="player-section" class="hidden bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden shadow-2xl">
+      <div class="p-3 bg-slate-800/70 flex items-center justify-between border-b border-slate-700">
+        <h2 id="player-title" class="font-bold text-sm text-emerald-400"></h2>
+        <button onclick="closePlayer()" class="text-xs bg-red-500/20 text-red-400 px-3 py-1 rounded-lg hover:bg-red-500/30">إغلاق ✕</button>
+      </div>
+      <div id="player-container" class="aspect-video bg-black flex items-center justify-center">
+        <video id="hls-video" controls autoplay playsinline class="w-full h-full hidden"></video>
+        <iframe id="embed-iframe" class="w-full h-full hidden" frameborder="0" allowfullscreen sandbox="allow-scripts allow-same-origin"></iframe>
+        <p id="no-stream-msg" class="text-slate-400 text-sm hidden">لم يتم إضافة روابط البث لهذه المباراة بعد.</p>
+      </div>
+      <div id="server-buttons" class="p-3 flex flex-wrap gap-2 bg-slate-900"></div>
+    </section>
+
+    <!-- Ad Slot -->
+    <div class="bg-slate-900/60 border border-dashed border-slate-700 rounded-xl p-4 text-center text-xs text-slate-500">
+      مساحة إعلانية (Adsterra / Monetag Banner)
+    </div>
+
+    <!-- Day Tabs (اليوم / غداً / الكل) -->
+    <div class="grid grid-cols-3 gap-2 bg-slate-900 p-1.5 rounded-xl border border-slate-800">
+      <button onclick="setDayFilter('today')" id="tab-today" class="day-tab py-2 rounded-lg text-xs font-bold bg-emerald-600 text-white transition">مباريات اليوم</button>
+      <button onclick="setDayFilter('tomorrow')" id="tab-tomorrow" class="day-tab py-2 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition">مباريات غداً</button>
+      <button onclick="setDayFilter('all')" id="tab-all" class="day-tab py-2 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition">الكل</button>
+    </div>
+
+    <!-- League Filter Pills -->
+    <div id="league-filters" class="flex gap-2 overflow-x-auto no-scrollbar pb-1"></div>
+
+    <!-- Search -->
+    <input id="search-input" type="text" placeholder="ابحث عن فريق أو دوري..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500" />
+
+    <!-- Grouped Matches List -->
+    <section id="matches-list" class="space-y-6"></section>
+  </main>
+
+  <script>
+    const SUPABASE_URL = 'https://uwyljkxcfcqmteltjzxu.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_5E_ajIPbGSP0Kx9a_LJJXQ_xiG4Jahx';
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let allMatches = [];
+    let currentDay = 'all';
+    let currentLeague = 'all';
+    let searchQuery = '';
+    let hlsInstance = null;
+
+    // ترتيب الدوريات المهمة اللولين
+    const LEAGUE_PRIORITY = [2, 140, 39, 135, 78, 61, 3, 848, 307, 94, 88];
+
+    async function loadMatches() {
+      const startOfDay = new Date();
+      startOfDay.setHours(0, 0, 0, 0);
+
+      const { data, error } = await sb
+        .from('matches')
+        .select('*')
+        .gte('match_time', startOfDay.toISOString())
+        .order('match_time', { ascending: true });
+
+      if (error) {
+        document.getElementById('matches-list').innerHTML = `<p class="text-red-400 text-center">خطأ: ${error.message}</p>`;
+        return;
+      }
+      allMatches = data || [];
+      setDayFilter(currentDay);
+    }
+
+    function setDayFilter(day) {
+      currentDay = day;
+      document.querySelectorAll('.day-tab').forEach(btn => {
+        btn.className = 'day-tab py-2 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition';
+      });
+      document.getElementById(`tab-${day}`).className = 'day-tab py-2 rounded-lg text-xs font-bold bg-emerald-600 text-white transition';
+      renderLeaguePills();
+      applyFilters();
+    }
+
+    function setLeagueFilter(leagueId) {
+      currentLeague = leagueId;
+      renderLeaguePills();
+      applyFilters();
+    }
+
+    function getDayFilteredMatches() {
+      const todayStr = new Date().toISOString().split('T')[0];
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const tomorrowStr = tomorrow.toISOString().split('T')[0];
+
+      return allMatches.filter(m => {
+        const mDate = new Date(m.match_time).toISOString().split('T')[0];
+        if (currentDay === 'today') return mDate === todayStr;
+        if (currentDay === 'tomorrow') return mDate === tomorrowStr;
+        return true;
+      });
+    }
+
+    function renderLeaguePills() {
+      const dayMatches = getDayFilteredMatches();
+      const leaguesMap = new Map();
+      dayMatches.forEach(m => {
+        if (!leaguesMap.has(m.league_id)) {
+          leaguesMap.set(m.league_id, { id: m.league_id, name: m.league_name, logo: m.league_logo });
+        }
+      });
+
+      const leagues = Array.from(leaguesMap.values()).sort((a, b) => {
+        const ia = LEAGUE_PRIORITY.indexOf(a.id);
+        const ib = LEAGUE_PRIORITY.indexOf(b.id);
+        return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
+      });
+
+      const container = document.getElementById('league-filters');
+      const allBtnClass = currentLeague === 'all'
+        ? 'bg-emerald-600 text-white border-emerald-500'
+        : 'bg-slate-900 text-slate-300 border-slate-800 hover:border-slate-600';
+
+      let html = `<button onclick="setLeagueFilter('all')" class="shrink-0 px-3.5 py-1.5 rounded-full text-xs font-bold border transition ${allBtnClass}">كل الدوريات</button>`;
+
+      html += leagues.map(l => {
+        const active = currentLeague === l.id
+          ? 'bg-emerald-600 text-white border-emerald-500'
+          : 'bg-slate-900 text-slate-300 border-slate-800 hover:border-slate-600';
+        return `
+          <button onclick="setLeagueFilter(${l.id})" class="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition ${active}">
+            <img src="${l.logo}" class="w-4 h-4 object-contain bg-white/90 rounded-full p-0.5" />
+            <span>${l.name}</span>
+          </button>
+        `;
+      }).join('');
+
+      container.innerHTML = html;
+    }
+
+    function applyFilters() {
+      let filtered = getDayFilteredMatches();
+
+      if (currentLeague !== 'all') {
+        filtered = filtered.filter(m => m.league_id === currentLeague);
+      }
+
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        filtered = filtered.filter(m =>
+          m.home_team.toLowerCase().includes(q) ||
+          m.away_team.toLowerCase().includes(q) ||
+          m.league_name.toLowerCase().includes(q)
+        );
+      }
+
+      renderGroupedMatches(filtered);
+    }
+
+    function renderGroupedMatches(matches) {
+      const container = document.getElementById('matches-list');
+      const liveStatuses = ['1H', '2H', 'HT', 'ET', 'P'];
+      const liveCount = matches.filter(m => liveStatuses.includes(m.status)).length;
+      document.getElementById('live-count').textContent = `${matches.length} مباريات | ${liveCount} مباشر`;
+
+      if (!matches.length) {
+        container.innerHTML = `<p class="text-center text-slate-400 py-10">لا توجد مباريات في هذا القسم.</p>`;
+        return;
+      }
+
+      // تجميع الماتشات حسب الدوري
+      const groups = {};
+      matches.forEach(m => {
+        if (!groups[m.league_id]) {
+          groups[m.league_id] = {
+            id: m.league_id,
+            name: m.league_name,
+            logo: m.league_logo,
+            matches: []
+          };
+        }
+        groups[m.league_id].matches.push(m);
+      });
+
+      const sortedGroups = Object.values(groups).sort((a, b) => {
+        const ia = LEAGUE_PRIORITY.indexOf(a.id);
+        const ib = LEAGUE_PRIORITY.indexOf(b.id);
+        return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
+      });
+
+      container.innerHTML = sortedGroups.map(group => `
+        <div class="space-y-2.5">
+          <!-- عنوان الدوري -->
+          <div class="flex items-center justify-between bg-slate-900/90 border border-slate-800 px-4 py-2.5 rounded-xl">
+            <div class="flex items-center gap-2.5">
+              <img src="${group.logo}" class="w-6 h-6 object-contain bg-white rounded-md p-0.5" />
+              <h2 class="font-bold text-sm text-emerald-400">${group.name}</h2>
+            </div>
+            <span class="text-[11px] bg-slate-800 text-slate-300 px-2.5 py-0.5 rounded-full">${group.matches.length} مباريات</span>
+          </div>
+
+          <!-- ماتشات الدوري -->
+          <div class="space-y-2">
+            ${group.matches.map(m => {
+              const isLive = liveStatuses.includes(m.status);
+              const timeStr = new Date(m.match_time).toLocaleTimeString('ar-MA', { hour: '2-digit', minute: '2-digit' });
+              const badge = isLive
+                ? `<span class="bg-red-600 text-white text-[11px] font-bold px-2.5 py-0.5 rounded-full animate-pulse">مباشر ${m.elapsed}'</span>`
+                : m.status === 'FT'
+                  ? `<span class="bg-slate-700 text-slate-300 text-[11px] px-2.5 py-0.5 rounded-full">انتهت</span>`
+                  : `<span class="bg-emerald-500/20 text-emerald-400 text-[11px] font-bold px-2.5 py-0.5 rounded-full">${timeStr}</span>`;
+
+              return `
+                <div onclick="openMatch(${m.id})" class="cursor-pointer bg-slate-900/60 hover:bg-slate-800/80 border border-slate-800/80 rounded-2xl p-4 transition">
+                  <div class="grid grid-cols-3 items-center gap-2 text-center">
+                    <div class="flex flex-col items-center gap-1.5">
+                      <img src="${m.home_logo}" class="w-10 h-10 object-contain" />
+                      <span class="text-xs font-bold">${m.home_team}</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-1.5">
+                      ${badge}
+                      <div class="text-2xl font-black tracking-wider ${isLive ? 'text-emerald-400' : 'text-white'}">
+                        ${m.status === 'NS' ? 'VS' : `${m.home_score} - ${m.away_score}`}
+                      </div>
+                    </div>
+                    <div class="flex flex-col items-center gap-1.5">
+                      <img src="${m.away_logo}" class="w-10 h-10 object-contain" />
+                      <span class="text-xs font-bold">${m.away_team}</span>
+                    </div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function openMatch(id) {
+      const m = allMatches.find(x => x.id === id);
+      if (!m) return;
+
+      document.getElementById('player-section').classList.remove('hidden');
+      document.getElementById('player-title').textContent = `${m.home_team} ضد ${m.away_team}`;
+      const servers = Array.isArray(m.servers) ? m.servers : [];
+      const btns = document.getElementById('server-buttons');
+
+      if (!servers.length) {
+        btns.innerHTML = '';
+        showNoStream();
+      } else {
+        btns.innerHTML = servers.map((s, i) =>
+          `<button onclick='playServer(${JSON.stringify(s)})' class="text-xs bg-emerald-600 hover:bg-emerald-500 px-3 py-1.5 rounded-lg font-bold">${s.name || 'سيرفر ' + (i+1)}</button>`
+        ).join('');
+        playServer(servers[0]);
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function playServer(server) {
+      const video = document.getElementById('hls-video');
+      const iframe = document.getElementById('embed-iframe');
+      const msg = document.getElementById('no-stream-msg');
+
+      if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null; }
+      video.classList.add('hidden');
+      iframe.classList.add('hidden');
+      msg.classList.add('hidden');
+
+      if (server.type === 'iframe') {
+        iframe.src = server.url;
+        iframe.classList.remove('hidden');
+      } else {
+        video.classList.remove('hidden');
+        if (Hls.isSupported()) {
+          hlsInstance = new Hls();
+          hlsInstance.loadSource(server.url);
+          hlsInstance.attachMedia(video);
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+          video.src = server.url;
+        }
+      }
+    }
+
+    function showNoStream() {
+      document.getElementById('hls-video').classList.add('hidden');
+      document.getElementById('embed-iframe').classList.add('hidden');
+      document.getElementById('no-stream-msg').classList.remove('hidden');
+    }
+
+    function closePlayer() {
+      if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null; }
+      document.getElementById('embed-iframe').src = '';
+      document.getElementById('player-section').classList.add('hidden');
+    }
+
+    document.getElementById('search-input').addEventListener('input', (e) => {
+      searchQuery = e.target.value;
+      applyFilters();
+    });
+
+    sb.channel('live-matches')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, loadMatches)
+      .subscribe();
+
+    loadMatches();
+  </script>
+</body>
+</html>

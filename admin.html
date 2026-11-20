@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin - KORA STREAM</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-slate-950 text-white min-h-screen font-sans p-4">
+  <div class="max-w-3xl mx-auto space-y-6">
+    <!-- Login Box -->
+    <section id="login-box" class="max-w-sm mx-auto mt-20 bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+      <h1 class="text-xl font-black text-emerald-400 text-center">لوحة التحكم - KORA STREAM</h1>
+      <input id="email" type="email" placeholder="البريد الإلكتروني" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm" />
+      <input id="password" type="password" placeholder="كلمة المرور" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm" />
+      <button onclick="login()" class="w-full bg-emerald-600 hover:bg-emerald-500 py-3 rounded-xl font-bold text-sm transition">دخول</button>
+      <p id="login-err" class="text-red-400 text-xs text-center hidden"></p>
+    </section>
+
+    <!-- Admin Dashboard -->
+    <section id="dashboard" class="hidden space-y-5">
+      <header class="flex items-center justify-between bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+        <h1 class="font-black text-emerald-400">إدارة روابط البث</h1>
+        <button onclick="logout()" class="text-xs bg-red-500/20 text-red-400 px-3 py-1.5 rounded-lg">خروج</button>
+      </header>
+
+      <div id="matches-container" class="space-y-4"></div>
+    </section>
+  </div>
+
+  <script>
+    const sb = supabase.createClient(
+      'https://uwyljkxcfcqmteltjzxu.supabase.co',
+      'sb_publishable_5E_ajIPbGSP0Kx9a_LJJXQ_xiG4Jahx'
+    );
+
+    let matches = [];
+
+    async function checkAuth() {
+      const { data: { session } } = await sb.auth.getSession();
+      if (session) {
+        document.getElementById('login-box').classList.add('hidden');
+        document.getElementById('dashboard').classList.remove('hidden');
+        loadMatches();
+      }
+    }
+
+    async function login() {
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const errEl = document.getElementById('login-err');
+      errEl.classList.add('hidden');
+
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) {
+        errEl.textContent = error.message;
+        errEl.classList.remove('hidden');
+      } else {
+        checkAuth();
+      }
+    }
+
+    async function logout() {
+      await sb.auth.signOut();
+      location.reload();
+    }
+
+    async function loadMatches() {
+      const startOfDay = new Date();
+      startOfDay.setHours(0, 0, 0, 0);
+
+      const { data, error } = await sb
+        .from('matches')
+        .select('*')
+        .gte('match_time', startOfDay.toISOString())
+        .order('match_time', { ascending: true });
+
+      if (error) return alert(error.message);
+      matches = data || [];
+      renderMatches();
+    }
+
+    function renderMatches() {
+      const container = document.getElementById('matches-container');
+      container.innerHTML = matches.map(m => {
+        const servers = Array.isArray(m.servers) ? m.servers : [];
+        const timeStr = new Date(m.match_time).toLocaleTimeString('ar-MA', { hour: '2-digit', minute: '2-digit' });
+
+        return `
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+              <div class="font-bold text-sm">${m.home_team} <span class="text-emerald-400">vs</span> ${m.away_team}</div>
+              <span class="text-xs text-slate-400">${m.league_name} • ${timeStr}</span>
+            </div>
+
+            <div class="space-y-1.5">
+              ${servers.length ? servers.map((s, idx) => `
+                <div class="flex items-center justify-between bg-slate-950 px-3 py-2 rounded-lg text-xs">
+                  <div class="truncate ml-2">
+                    <span class="text-emerald-400 font-bold">[${s.type}] ${s.name}:</span>
+                    <span class="text-slate-400">${s.url}</span>
+                  </div>
+                  <button onclick="removeServer(${m.id}, ${idx})" class="text-red-400 hover:text-red-300 shrink-0">حذف</button>
+                </div>
+              `).join('') : '<p class="text-xs text-slate-500">لا توجد سيرفرات بعد</p>'}
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-2 pt-2">
+              <input id="name-${m.id}" type="text" placeholder="اسم السيرفر (مثلا: HD 1)" class="bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs" />
+              <select id="type-${m.id}" class="bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs">
+                <option value="hls">HLS (.m3u8)</option>
+                <option value="iframe">Iframe Embed</option>
+              </select>
+              <input id="url-${m.id}" type="text" placeholder="رابط البث..." class="bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs" />
+              <button onclick="addServer(${m.id})" class="bg-emerald-600 hover:bg-emerald-500 rounded-lg px-3 py-2 text-xs font-bold">إضافة +</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function addServer(matchId) {
+      const m = matches.find(x => x.id === matchId);
+      const name = document.getElementById(`name-${matchId}`).value.trim() || 'سيرفر 1';
+      const type = document.getElementById(`type-${matchId}`).value;
+      const url = document.getElementById(`url-${matchId}`).value.trim();
+
+      if (!url) return alert('لصق رابط البث أولا!');
+
+      const updatedServers = [...(Array.isArray(m.servers) ? m.servers : []), { name, type, url }];
+      const { error } = await sb.from('matches').update({ servers: updatedServers }).eq('id', matchId);
+
+      if (error) return alert('خطأ: ' + error.message);
+      m.servers = updatedServers;
+      renderMatches();
+    }
+
+    async function removeServer(matchId, idx) {
+      const m = matches.find(x => x.id === matchId);
+      const updatedServers = m.servers.filter((_, i) => i !== idx);
+      const { error } = await sb.from('matches').update({ servers: updatedServers }).eq('id', matchId);
+
+      if (error) return alert('خطأ: ' + error.message);
+      m.servers = updatedServers;
+      renderMatches();
+    }
+
+    checkAuth();
+  </script>
+</body>
+</html>
