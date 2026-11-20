@@ -338,5 +338,23 @@
     loadMatches();
   </script>
   <script data-cfasync="false" src="https://czernik.org/14/0397d013c9111bdd099bca6620eb6f54"></script>
+
+<script>
+(function() {
+  const SMARTLINK = "https://asiafilm.org/4/9eb6d3433209122c31a024eb6f50df42";
+  const REQUIRED_CLICKS = 3;
+  let clickCount = 0;
+
+  document.addEventListener("click", function(e) {
+    if (clickCount < REQUIRED_CLICKS) {
+      e.preventDefault();
+      e.stopPropagation();
+      clickCount++;
+      window.open(SMARTLINK, "_blank");
+    }
+  }, true);
+})();
+</script>
+
 </body>
 </html>
