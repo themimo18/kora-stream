@@ -109,7 +109,7 @@
   <script>
     const SUPABASE_URL = 'https://uwyljkxcfcqmteltjzxu.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_5E_ajIPbGSP0Kx9a_LJJXQ_xiG4Jahx';
-    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const sb = (typeof supabase !== "undefined") ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
     let allMatches = [];
     let currentDay = 'all';
@@ -127,6 +127,29 @@
         allMatches = JSON.parse(cached);
         setDayFilter(currentDay);
       }
+    } catch (e) {}
+
+    try {
+      const startOfDay = new Date();
+      startOfDay.setHours(0, 0, 0, 0);
+      const url = SUPABASE_URL + "/rest/v1/matches?select=*&match_time=gte." + encodeURIComponent(startOfDay.toISOString()) + "&order=match_time.asc";
+      const res = await fetch(url, {
+        headers: { apikey: SUPABASE_ANON_KEY, Authorization: "Bearer " + SUPABASE_ANON_KEY }
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const data = await res.json();
+      allMatches = data || [];
+      try { localStorage.setItem("kora_matches_cache", JSON.stringify(allMatches)); } catch (e) {}
+      setDayFilter(currentDay);
+    } catch (err) {
+      if (retry < 2) {
+        setTimeout(() => loadMatches(retry + 1), 1500);
+      } else if (!allMatches.length) {
+        document.getElementById("live-count").textContent = "خطأ في التحميل";
+        document.getElementById("matches-list").innerHTML = `<div class="text-center py-10 space-y-3"><p class="text-slate-400 text-sm">تعذر تحميل المباريات حالياً</p><button onclick="loadMatches(0)" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2 rounded-lg">إعادة المحاولة 🔄</button></div>`;
+      }
+    }
+  }
     } catch (e) {}
 
     try {
@@ -402,9 +425,9 @@
       applyFilters();
     });
 
-    sb.channel('live-matches')
+    if (sb) { try { sb.channel('live-matches')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, loadMatches)
-      .subscribe();
+      .subscribe(); } catch (e) {} }
 
     loadMatches();
   </script>
