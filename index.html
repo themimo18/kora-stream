@@ -353,7 +353,14 @@
     function showNoStream() {
       document.getElementById('hls-video').classList.add('hidden');
       document.getElementById('embed-iframe').classList.add('hidden');
-      document.getElementById('no-stream-msg').classList.remove('hidden');
+      const msg = document.getElementById('no-stream-msg');
+  msg.innerHTML = `<div class="flex flex-col items-center justify-center gap-3 p-6 text-center">
+    <div class="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+    <p class="text-white font-bold text-base">جاري تجهيز البث المباشر...</p>
+    <p class="text-slate-400 text-xs">يرجى الانتظار قليلاً، سيظهر البث بعد لحظات ⚽</p>
+    <button onclick="location.reload()" class="mt-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2 rounded-lg transition">تحديث الصفحة 🔄</button>
+  </div>`;
+  msg.classList.remove('hidden');
     }
 
     function closePlayer() {
