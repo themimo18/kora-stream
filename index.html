@@ -120,23 +120,37 @@
     // ترتيب الدوريات المهمة اللولين
     const LEAGUE_PRIORITY = [2, 140, 39, 135, 78, 61, 3, 848, 307, 94, 88];
 
-    async function loadMatches() {
+    async function loadMatches(retry = 0) {
+    try {
+      const cached = localStorage.getItem("kora_matches_cache");
+      if (cached && !allMatches.length) {
+        allMatches = JSON.parse(cached);
+        setDayFilter(currentDay);
+      }
+    } catch (e) {}
+
+    try {
       const startOfDay = new Date();
       startOfDay.setHours(0, 0, 0, 0);
 
       const { data, error } = await sb
-        .from('matches')
-        .select('*')
-        .gte('match_time', startOfDay.toISOString())
-        .order('match_time', { ascending: true });
+        .from("matches")
+        .select("*")
+        .gte("match_time", startOfDay.toISOString())
+        .order("match_time", { ascending: true });
 
-      if (error) {
-        document.getElementById('matches-list').innerHTML = `<p class="text-red-400 text-center">خطأ: ${error.message}</p>`;
-        return;
-      }
+      if (error) throw error;
       allMatches = data || [];
+      try { localStorage.setItem("kora_matches_cache", JSON.stringify(allMatches)); } catch (e) {}
       setDayFilter(currentDay);
+    } catch (err) {
+      if (retry < 2) {
+        setTimeout(() => loadMatches(retry + 1), 1500);
+      } else if (!allMatches.length) {
+        document.getElementById("matches-list").innerHTML = `<div class="text-center py-10 space-y-3"><p class="text-slate-400 text-sm">تعذر تحميل المباريات حالياً</p><button onclick="loadMatches(0)" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2 rounded-lg">إعادة المحاولة 🔄</button></div>`;
+      }
     }
+  }
 
     function setDayFilter(day) {
       currentDay = day;
