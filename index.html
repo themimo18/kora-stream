@@ -310,7 +310,21 @@
 
       document.getElementById('player-section').classList.remove('hidden');
       document.getElementById('player-title').textContent = `${m.home_team} ضد ${m.away_team}`;
-      const servers = Array.isArray(m.servers) ? m.servers : [];
+      let vc = document.getElementById("viewer-counter");
+    if (!vc) {
+      vc = document.createElement("div");
+      vc.id = "viewer-counter";
+      vc.className = "inline-flex items-center gap-1.5 text-xs font-bold text-red-400 bg-red-500/10 border border-red-500/20 px-2.5 py-1 rounded-full mt-1";
+      document.getElementById("player-title").insertAdjacentElement("afterend", vc);
+    }
+    let vCount = Math.floor(Math.random() * 1100) + 750;
+    vc.innerHTML = "<span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span><span>" + vCount.toLocaleString() + " يشاهدون الآن</span>";
+    if (window._vcTimer) clearInterval(window._vcTimer);
+    window._vcTimer = setInterval(() => {
+      vCount = Math.max(450, vCount + Math.floor(Math.random() * 25) - 10);
+      vc.innerHTML = "<span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span><span>" + vCount.toLocaleString() + " يشاهدون الآن</span>";
+    }, 5000);
+    const servers = Array.isArray(m.servers) ? m.servers : [];
       const btns = document.getElementById('server-buttons');
 
       if (!servers.length) {
