@@ -1,7 +1,7 @@
 name: Auto Sync Football Matches
 on:
   schedule:
-    - cron: '*/15 * * * *'
+    - cron: '*/30 * * * *'
   workflow_dispatch:
 jobs:
   sync:
