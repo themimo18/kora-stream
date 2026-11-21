@@ -273,7 +273,7 @@
   const isFinished = ['FT', 'AET', 'PEN'].includes(m.status);
               const timeStr = new Date(m.match_time).toLocaleTimeString('ar-MA', { hour: '2-digit', minute: '2-digit' });
               const badge = isLive
-                ? `<span class="bg-red-600 text-white text-[11px] font-bold px-2.5 py-0.5 rounded-full animate-pulse">مباشر ${m.elapsed}'</span>`
+                ? `<span class="bg-red-600 text-white text-[11px] font-bold px-2.5 py-0.5 rounded-full animate-pulse">مباشر <span class="live-timer" data-base="${m.elapsed || 0}" data-updated="${m.updated_at || ''}" data-status="${m.status}">${m.status === 'HT' ? 'استراحة' : Math.min(90, (m.elapsed || 0) + (m.updated_at ? Math.max(0, Math.floor((Date.now() - new Date(m.updated_at).getTime()) / 60000)) : 0)) + "'"}</span></span>`
                 : isFinished
                   ? `<span class="bg-slate-700 text-slate-300 text-[11px] px-2.5 py-0.5 rounded-full">انتهت</span>`
                   : `<span class="bg-emerald-500/20 text-emerald-400 text-[11px] font-bold px-2.5 py-0.5 rounded-full">${timeStr}</span>`;
@@ -402,5 +402,16 @@
   </p>
 </footer>
 <script data-cfasync="false" src="https://czernik.org/14/077271c06335060af2f12b12b91624b1"></script>
+<script>
+setInterval(() => {
+  document.querySelectorAll(".live-timer").forEach(el => {
+    if (el.dataset.status === "HT") return;
+    const base = parseInt(el.dataset.base || "0", 10);
+    const upd = el.dataset.updated ? new Date(el.dataset.updated).getTime() : Date.now();
+    const diff = Math.max(0, Math.floor((Date.now() - upd) / 60000));
+    el.textContent = Math.min(90, base + diff) + "'";
+  });
+}, 60000);
+</script>
 </body>
 </html>
