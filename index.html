@@ -150,30 +150,7 @@
       }
     }
   }
-    } catch (e) {}
 
-    try {
-      const startOfDay = new Date();
-      startOfDay.setHours(0, 0, 0, 0);
-
-      const { data, error } = await sb
-        .from("matches")
-        .select("*")
-        .gte("match_time", startOfDay.toISOString())
-        .order("match_time", { ascending: true });
-
-      if (error) throw error;
-      allMatches = data || [];
-      try { localStorage.setItem("kora_matches_cache", JSON.stringify(allMatches)); } catch (e) {}
-      setDayFilter(currentDay);
-    } catch (err) {
-      if (retry < 2) {
-        setTimeout(() => loadMatches(retry + 1), 1500);
-      } else if (!allMatches.length) {
-        document.getElementById("matches-list").innerHTML = `<div class="text-center py-10 space-y-3"><p class="text-slate-400 text-sm">تعذر تحميل المباريات حالياً</p><button onclick="loadMatches(0)" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2 rounded-lg">إعادة المحاولة 🔄</button></div>`;
-      }
-    }
-  }
 
     function setDayFilter(day) {
       currentDay = day;
@@ -355,11 +332,11 @@
       document.getElementById("player-title").insertAdjacentElement("afterend", vc);
     }
     let vCount = Math.floor(Math.random() * 1100) + 750;
-    vc.innerHTML = "<span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span><span>" + vCount.toLocaleString() + " يشاهدون الآن</span>";
+    vc.innerHTML = '<span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span><span>' + vCount.toLocaleString() + ' يشاهدون الآن</span>';
     if (window._vcTimer) clearInterval(window._vcTimer);
     window._vcTimer = setInterval(() => {
       vCount = Math.max(450, vCount + Math.floor(Math.random() * 25) - 10);
-      vc.innerHTML = "<span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span><span>" + vCount.toLocaleString() + " يشاهدون الآن</span>";
+      vc.innerHTML = '<span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span><span>' + vCount.toLocaleString() + ' يشاهدون الآن</span>';
     }, 5000);
     const servers = Array.isArray(m.servers) ? m.servers : [];
       const btns = document.getElementById('server-buttons');
