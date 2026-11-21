@@ -270,15 +270,16 @@
           <div class="space-y-2">
             ${group.matches.map(m => {
               const isLive = liveStatuses.includes(m.status);
+  const isFinished = ['FT', 'AET', 'PEN'].includes(m.status);
               const timeStr = new Date(m.match_time).toLocaleTimeString('ar-MA', { hour: '2-digit', minute: '2-digit' });
               const badge = isLive
                 ? `<span class="bg-red-600 text-white text-[11px] font-bold px-2.5 py-0.5 rounded-full animate-pulse">مباشر ${m.elapsed}'</span>`
-                : m.status === 'FT'
+                : isFinished
                   ? `<span class="bg-slate-700 text-slate-300 text-[11px] px-2.5 py-0.5 rounded-full">انتهت</span>`
                   : `<span class="bg-emerald-500/20 text-emerald-400 text-[11px] font-bold px-2.5 py-0.5 rounded-full">${timeStr}</span>`;
 
               return `
-                <div onclick="openMatch(${m.id})" class="cursor-pointer bg-slate-900/60 hover:bg-slate-800/80 border border-slate-800/80 rounded-2xl p-4 transition">
+                <div ${isFinished ? '' : `onclick="openMatch(${m.id})"`} class="${isFinished ? 'opacity-75 cursor-default' : 'cursor-pointer hover:bg-slate-800/80'} bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 transition">
                   <div class="grid grid-cols-3 items-center gap-2 text-center">
                     <div class="flex flex-col items-center gap-1.5">
                       <img src="${m.home_logo}" class="w-10 h-10 object-contain" />
