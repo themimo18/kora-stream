@@ -118,7 +118,7 @@
     const sb = (typeof supabase !== "undefined") ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
     let allMatches = [];
-    let currentDay = 'all';
+    let currentDay = 'today';
     let currentLeague = 'all';
     let searchQuery = '';
     let hlsInstance = null;
