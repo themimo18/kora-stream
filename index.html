@@ -469,5 +469,29 @@ setInterval(() => {
   });
 }, 60000);
 </script>
+
+<script>
+  function triggerPlayerAd() {
+    window.open("https://budgetezy.org/4/2fb4c68a887e894f3bc34cfc50187156", "_blank");
+    const shield = document.getElementById("player-ad-shield");
+    if (shield) {
+      shield.style.display = "none";
+      setTimeout(() => { shield.style.display = "block"; }, 10 * 60 * 1000);
+    }
+  }
+  (function initPlayerShield() {
+    const pc = document.getElementById("player-container");
+    if (!pc || !pc.parentNode || document.getElementById("player-ad-shield")) return;
+    const wrap = document.createElement("div");
+    wrap.className = "relative";
+    pc.parentNode.insertBefore(wrap, pc);
+    wrap.appendChild(pc);
+    const shield = document.createElement("div");
+    shield.id = "player-ad-shield";
+    shield.style.cssText = "position:absolute;inset:0;z-index:40;cursor:pointer;background:transparent;";
+    shield.onclick = triggerPlayerAd;
+    wrap.appendChild(shield);
+  })();
+</script>
 </body>
 </html>
