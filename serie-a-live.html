@@ -73,6 +73,111 @@
       <a class="cta" href="/">&#128293; مشاهدة جدول مباريات اليوم بث مباشر &larr;</a>
     </section>
 
+    <!-- KT_LIVE_MATCHES -->
+    <style>
+      .kt-live-sec{margin-bottom:26px;}
+      .kt-live-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
+      .kt-live-head h2{font-size:1.2rem;display:flex;align-items:center;gap:8px;color:#f8fafc;}
+      .kt-live-sub{font-size:.82rem;color:#94a3b8;}
+      .kt-live-list{display:flex;flex-direction:column;gap:10px;}
+      .kt-match{display:block;background:#111927;border:1px solid #1f2b3d;border-radius:14px;padding:12px 16px;transition:border-color .15s,transform .15s;}
+      .kt-match:hover{border-color:#10b981;transform:translateY(-1px);}
+      .kt-meta{display:flex;justify-content:space-between;font-size:.75rem;color:#94a3b8;margin-bottom:8px;border-bottom:1px solid rgba(148,163,184,.1);padding-bottom:6px;}
+      .kt-row{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;}
+      .kt-team{display:flex;align-items:center;gap:8px;font-weight:700;font-size:.95rem;color:#f8fafc;}
+      .kt-away{justify-content:flex-end;text-align:left;}
+      .kt-logo{width:28px;height:28px;object-fit:contain;border-radius:50%;background:rgba(255,255,255,.06);padding:2px;}
+      .kt-mid{text-align:center;min-width:74px;}
+      .kt-badge-live{display:inline-flex;align-items:center;gap:5px;background:rgba(239,68,68,.18);color:#f87171;border:1px solid rgba(239,68,68,.4);padding:2px 10px;border-radius:999px;font-size:.74rem;font-weight:800;}
+      .kt-pulse{width:7px;height:7px;border-radius:50%;background:#ef4444;display:inline-block;}
+      .kt-badge-time{display:inline-block;background:rgba(16,185,129,.15);color:#34d399;border:1px solid rgba(16,185,129,.3);padding:3px 10px;border-radius:8px;font-size:.78rem;font-weight:700;}
+      .kt-badge-end{display:inline-block;background:rgba(148,163,184,.15);color:#94a3b8;padding:2px 10px;border-radius:8px;font-size:.74rem;font-weight:700;}
+      .kt-score{font-weight:800;font-size:1rem;color:#fff;margin-top:4px;direction:ltr;}
+      .kt-empty{background:#111927;border:1px dashed #1f2b3d;border-radius:12px;padding:18px;text-align:center;color:#94a3b8;font-size:.9rem;}
+    </style>
+    <section class="kt-live-sec" aria-label="مباريات الدوري الإيطالي اليوم">
+      <div class="kt-live-head">
+        <h2><span class="dot"></span> مباريات الدوري الإيطالي اليوم</h2>
+        <span id="kt-live-sub" class="kt-live-sub">تحديث مباشر من جدول كورة توداي</span>
+      </div>
+      <div id="kt-live-list" class="kt-live-list">
+        <div class="kt-empty">جاري تحميل جدول المباريات المباشر...</div>
+      </div>
+    </section>
+    <script>
+(async function(){
+  const SB_URL = "https://uwyljkxcfcqmteltjzxu.supabase.co";
+  const SB_KEY = "sb_publishable_5E_ajIPbGSP0Kx9a_LJJXQ_xiG4Jahx";
+  const SB_TABLE = "matches";
+  const HAS_WATCH = false;
+  const KEYS = ["الإيطالي","الايطالي","الكالتشيو","serie a","italy"];
+  const TITLE = "مباريات الدوري الإيطالي اليوم";
+  const box = document.getElementById('kt-live-list');
+  const sub = document.getElementById('kt-live-sub');
+  if(!box) return;
+  function esc(s){ return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function pick(m, arr){ for(const k of arr){ if(m && m[k] !== undefined && m[k] !== null && m[k] !== '') return m[k]; } return ''; }
+  try {
+    const res = await fetch(SB_URL + '/rest/v1/' + SB_TABLE + '?select=*&limit=60', {
+      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY }
+    });
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    let rows = await res.json();
+    if(!Array.isArray(rows)) rows = [];
+    const norm = rows.map(m => {
+      const home = pick(m, ['home_team','team1','team_a','home','home_name','team1_name']) || 'الفريق 1';
+      const away = pick(m, ['away_team','team2','team_b','away','away_name','team2_name']) || 'الفريق 2';
+      const hLogo = pick(m, ['home_logo','team1_logo','logo1','home_img','team_a_logo']);
+      const aLogo = pick(m, ['away_logo','team2_logo','logo2','away_img','team_b_logo']);
+      const league = pick(m, ['league','league_name','competition','championship','tournament']);
+      const channel = pick(m, ['channel','tv_channel','commentator']);
+      const time = pick(m, ['match_time','time','kickoff','start_time','hour']);
+      const statusRaw = String(pick(m, ['status','state','match_status']) || '').toLowerCase();
+      const isLive = m.is_live === true || /live|مباشر|جار|الآن|الان|1h|2h|ht/.test(statusRaw);
+      const isEnded = /ft|ended|finished|انتهت|نهاية/.test(statusRaw);
+      const hs = m.home_score ?? m.score1 ?? m.team1_score;
+      const as = m.away_score ?? m.score2 ?? m.team2_score;
+      const score = (hs !== undefined && hs !== null && as !== undefined && as !== null) ? (hs + ' - ' + as) : pick(m, ['score','result']);
+      const id = m.id || '';
+      const blob = (home + ' ' + away + ' ' + league + ' ' + channel).toLowerCase();
+      return { home, away, hLogo, aLogo, league, channel, time, isLive, isEnded, score, id, blob };
+    });
+    norm.sort((a,b) => (b.isLive - a.isLive) || (a.isEnded - b.isEnded));
+    let list = norm;
+    if(KEYS.length > 0){
+      const matched = norm.filter(x => KEYS.some(k => x.blob.includes(k.toLowerCase())));
+      if(matched.length > 0){ list = matched; }
+      else if(sub){ sub.textContent = 'أهم مباريات اليوم المتاحة الآن للبث المباشر'; }
+    }
+    list = list.slice(0, 12);
+    if(!list.length){
+      box.innerHTML = '<div class="kt-empty">لا توجد مباريات مضافة حالياً — اضغط على الزر أعلاه لتصفح جدول اليوم المحدث.</div>';
+      return;
+    }
+    box.innerHTML = list.map(m => {
+      const href = (HAS_WATCH && m.id) ? ('/watch.html?id=' + encodeURIComponent(m.id)) : '/';
+      const badge = m.isLive
+        ? '<span class="kt-badge-live"><span class="kt-pulse"></span> مباشر</span>'
+        : (m.isEnded ? '<span class="kt-badge-end">انتهت</span>' : '<span class="kt-badge-time">' + esc(m.time || 'اليوم') + '</span>');
+      const mid = (m.isLive || m.isEnded) && m.score ? '<div class="kt-score">' + esc(m.score) + '</div>' : '';
+      const hImg = m.hLogo ? '<img class="kt-logo" src="' + esc(m.hLogo) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">' : '';
+      const aImg = m.aLogo ? '<img class="kt-logo" src="' + esc(m.aLogo) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">' : '';
+      return '<a class="kt-match" href="' + href + '">' +
+        '<div class="kt-meta"><span>' + esc(m.league || 'بث مباشر') + '</span><span>' + esc(m.channel || 'HD') + '</span></div>' +
+        '<div class="kt-row">' +
+          '<div class="kt-team">' + hImg + '<span>' + esc(m.home) + '</span></div>' +
+          '<div class="kt-mid">' + badge + mid + '</div>' +
+          '<div class="kt-team kt-away"><span>' + esc(m.away) + '</span>' + aImg + '</div>' +
+        '</div>' +
+      '</a>';
+    }).join('');
+  } catch(e) {
+    box.innerHTML = '<div class="kt-empty">اضغط على <a href="/" style="color:#34d399;text-decoration:underline;">الصفحة الرئيسية</a> لفتح جدول مباريات اليوم المباشر.</div>';
+  }
+})();
+    </script>
+    <!-- /KT_LIVE_MATCHES -->
+
     <section class="grid">
       <article class="card">
         <h2>مميزات البث على كورة توداي</h2>
