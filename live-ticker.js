@@ -10,10 +10,26 @@
     { id: 'caf.champions', name: 'أبطال إفريقيا' }
   ];
 
+  var STAT_LABELS = {
+    possessionPct: 'الاستحواذ %',
+    totalShots: 'إجمالي التسديدات',
+    shotsOnTarget: 'تسديدات على المرمى',
+    wonCorners: 'الركنيات',
+    foulsCommitted: 'الأخطاء',
+    yellowCards: 'بطاقات صفراء',
+    redCards: 'بطاقات حمراء',
+    offsides: 'التسلل',
+    saves: 'التصديات',
+    accuratePasses: 'تمريرات صحيحة',
+    passPct: 'دقة التمرير %'
+  };
+
   var dayOffset = 0;
   var activeLeague = 'all';
   var liveOnly = false;
   var allEvents = [];
+  var modalSummary = null;
+  var modalTab = 'events';
 
   function esc(s) {
     return String(s || '').replace(/[&<>"']/g, function(m) {
@@ -24,16 +40,12 @@
   function getDateParam(offset) {
     var d = new Date();
     d.setDate(d.getDate() + offset);
-    var y = d.getFullYear();
-    var m = String(d.getMonth() + 1).padStart(2, '0');
-    var day = String(d.getDate()).padStart(2, '0');
-    return '' + y + m + day;
+    return '' + d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
   }
 
   function fmtLocalTime(iso) {
     try {
-      var d = new Date(iso);
-      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+      return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
     } catch (e) {
       return '--:--';
     }
@@ -44,19 +56,21 @@
     if (!box) return;
     var dateStr = getDateParam(dayOffset);
     var cacheKey = 'kt_ticker_cache_' + dateStr;
+
     try {
       var cached = JSON.parse(sessionStorage.getItem(cacheKey) || 'null');
       if (cached && (Date.now() - cached.ts) < 55000) {
         allEvents = cached.data || [];
         if (dayOffset === 0) {
           window.ktTodayEvents = allEvents;
-          window.dispatchEvent(new CustomEvent("kt-ticker-updated", { detail: allEvents }));
+          window.dispatchEvent(new CustomEvent('kt-ticker-updated', { detail: allEvents }));
         }
         updateLiveBadge();
         renderTicker();
         return;
       }
     } catch (e) {}
+
     var results = await Promise.allSettled(LEAGUES.map(async function(lg) {
       var url = 'https://site.api.espn.com/apis/site/v2/sports/soccer/' + lg.id + '/scoreboard?dates=' + dateStr;
       var res = await fetch(url);
@@ -88,12 +102,9 @@
 
     var merged = [];
     results.forEach(function(r) {
-      if (r.status === 'fulfilled' && Array.isArray(r.value)) {
-        merged = merged.concat(r.value);
-      }
+      if (r.status === 'fulfilled' && Array.isArray(r.value)) merged = merged.concat(r.value);
     });
 
-    // Sort: LIVE first, then upcoming by time, then finished
     var order = { 'in': 0, 'pre': 1, 'post': 2 };
     merged.sort(function(a, b) {
       var oa = order[a.state] !== undefined ? order[a.state] : 3;
@@ -105,7 +116,7 @@
     allEvents = merged;
     if (dayOffset === 0) {
       window.ktTodayEvents = merged;
-      window.dispatchEvent(new CustomEvent("kt-ticker-updated", { detail: merged }));
+      window.dispatchEvent(new CustomEvent('kt-ticker-updated', { detail: merged }));
     }
     try { sessionStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data: merged })); } catch (e) {}
     updateLiveBadge();
@@ -157,15 +168,190 @@
 
       var hImg = m.homeLogo ? '<img src="' + esc(m.homeLogo) + '" alt="' + esc(m.homeName) + '" class="w-6 h-6 object-contain shrink-0" loading="lazy" />' : '';
       var aImg = m.awayLogo ? '<img src="' + esc(m.awayLogo) + '" alt="' + esc(m.awayName) + '" class="w-6 h-6 object-contain shrink-0" loading="lazy" />' : '';
-      var cardBorder = m.state === 'in' ? 'border-red-500/60 bg-slate-900' : 'border-slate-800 bg-slate-900/90 hover:border-sky-500/50';
+      var cardBorder = m.state === 'in' ? 'border-red-500/60 bg-slate-900' : 'border-slate-800 bg-slate-900/90 hover:border-sky-500/60';
 
-      return '<a href="index.html" title="' + esc(m.homeName + ' vs ' + m.awayName + ' (' + m.leagueName + ')') + '" class="flex items-center gap-2 px-2.5 py-1.5 rounded-xl border ' + cardBorder + ' shrink-0 transition">' +
+      return '<button type="button" onclick="ktOpenMatch(\'' + esc(m.leagueId) + '\',\'' + esc(m.id) + '\')" title="تفاصيل وإحصائيات: ' + esc(m.homeName + ' vs ' + m.awayName) + '" class="cursor-pointer flex items-center gap-2 px-2.5 py-1.5 rounded-xl border ' + cardBorder + ' shrink-0 transition">' +
         '<div class="flex items-center gap-1.5">' + hImg + '<span class="text-[11px] font-bold text-slate-200 max-w-[68px] truncate hidden md:inline">' + esc(m.homeName) + '</span></div>' +
         centerBadge +
         '<div class="flex items-center gap-1.5"><span class="text-[11px] font-bold text-slate-200 max-w-[68px] truncate hidden md:inline">' + esc(m.awayName) + '</span>' + aImg + '</div>' +
-      '</a>';
+      '</button>';
     }).join('');
   }
+
+  // --- Match Details Modal (Goals, Stats, Lineups) ---
+  function ensureModal() {
+    if (document.getElementById('kt-match-modal')) return;
+    var wrap = document.createElement('div');
+    wrap.id = 'kt-match-modal';
+    wrap.dir = 'rtl';
+    wrap.className = 'hidden fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4';
+    wrap.onclick = function(e) { if (e.target === wrap) ktCloseMatch(); };
+    wrap.innerHTML =
+      '<div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-xl w-full max-h-[88vh] flex flex-col overflow-hidden shadow-2xl text-slate-100">' +
+        '<div class="px-4 py-3 bg-slate-950/90 border-b border-slate-800 flex items-center justify-between gap-2">' +
+          '<span id="ktm-league" class="text-xs font-black text-sky-400">تفاصيل المباراة</span>' +
+          '<button type="button" onclick="ktCloseMatch()" class="text-xs bg-red-500/20 text-red-400 hover:bg-red-500/30 px-2.5 py-1 rounded-lg font-bold">إغلاق ✕</button>' +
+        '</div>' +
+        '<div id="ktm-score" class="px-4 py-4 bg-gradient-to-b from-slate-900 to-slate-950 border-b border-slate-800"></div>' +
+        '<div class="px-3 py-2 bg-slate-950/60 border-b border-slate-800 flex items-center justify-between gap-2 flex-wrap">' +
+          '<div class="flex items-center gap-1.5">' +
+            '<button type="button" onclick="ktModalTab(\'events\')" id="ktmt-events" class="px-3 py-1.5 rounded-lg text-xs font-black bg-emerald-500 text-slate-950">⚽ الأحداث</button>' +
+            '<button type="button" onclick="ktModalTab(\'stats\')" id="ktmt-stats" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700">📊 الإحصائيات</button>' +
+            '<button type="button" onclick="ktModalTab(\'lineups\')" id="ktmt-lineups" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700">👕 التشكيلة</button>' +
+          '</div>' +
+          '<a href="index.html" onclick="ktCloseMatch()" class="px-3 py-1.5 rounded-lg text-xs font-black bg-red-600 hover:bg-red-500 text-white whitespace-nowrap">📺 البث المباشر</a>' +
+        '</div>' +
+        '<div id="ktm-body" class="p-4 overflow-y-auto space-y-3 flex-1 text-xs"></div>' +
+      '</div>';
+    document.body.appendChild(wrap);
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') ktCloseMatch();
+    });
+  }
+
+  window.ktCloseMatch = function() {
+    var m = document.getElementById('kt-match-modal');
+    if (m) m.classList.add('hidden');
+  };
+
+  window.ktModalTab = function(tab) {
+    modalTab = tab;
+    ['events', 'stats', 'lineups'].forEach(function(t) {
+      var b = document.getElementById('ktmt-' + t);
+      if (b) b.className = (t === tab)
+        ? 'px-3 py-1.5 rounded-lg text-xs font-black bg-emerald-500 text-slate-950'
+        : 'px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700';
+    });
+    renderModalBody();
+  };
+
+  function renderModalBody() {
+    var body = document.getElementById('ktm-body');
+    if (!body || !modalSummary) return;
+
+    if (modalTab === 'events') {
+      var evs = modalSummary.keyEvents || [];
+      if (!evs.length) {
+        body.innerHTML = '<div class="text-center py-8 text-slate-400">لا توجد أحداث مسجلة حالياً (ستظهر الأهداف والبطاقات فور انطلاق المباراة).</div>';
+        return;
+      }
+      body.innerHTML = evs.map(function(ev) {
+        var icon = '🔹';
+        var tName = (ev.type && ev.type.text) || '';
+        if (ev.scoringPlay || /goal/i.test(tName)) icon = '⚽';
+        else if (ev.redCard || /red card/i.test(tName)) icon = '🟥';
+        else if (ev.yellowCard || /yellow card/i.test(tName)) icon = '🟨';
+        else if (/substitution/i.test(tName)) icon = '🔄';
+        var min = (ev.clock && ev.clock.displayValue) || '';
+        var pName = (ev.participants && ev.participants[0] && ev.participants[0].athlete && ev.participants[0].athlete.displayName) || '';
+        var teamN = (ev.team && ev.team.displayName) || '';
+        var desc = ev.text || (pName ? (pName + (teamN ? ' (' + teamN + ')' : '')) : tName);
+        return '<div class="flex items-start gap-2.5 bg-slate-950/70 border border-slate-800 rounded-xl p-3">' +
+          '<span class="px-2 py-0.5 rounded bg-slate-800 text-emerald-400 font-mono font-bold shrink-0">' + esc(min || '--') + '</span>' +
+          '<span class="text-sm leading-none mt-0.5">' + icon + '</span>' +
+          '<div class="flex-1 text-slate-200 leading-relaxed">' + esc(desc) + '</div>' +
+        '</div>';
+      }).join('');
+      return;
+    }
+
+    if (modalTab === 'stats') {
+      var teams = (modalSummary.boxscore && modalSummary.boxscore.teams) || [];
+      if (teams.length < 2 || !teams[0].statistics || !teams[0].statistics.length) {
+        body.innerHTML = '<div class="text-center py-8 text-slate-400">الإحصائيات المباشرة غير متوفرة قبل بداية المباراة.</div>';
+        return;
+      }
+      var s0 = teams[0].statistics || [];
+      var s1 = teams[1].statistics || [];
+      var wanted = ['possessionPct', 'totalShots', 'shotsOnTarget', 'wonCorners', 'foulsCommitted', 'yellowCards', 'redCards', 'offsides', 'saves', 'passPct'];
+      var rows = wanted.map(function(k) {
+        var a = s0.find(function(x) { return x.name === k; });
+        var b = s1.find(function(x) { return x.name === k; });
+        if (!a && !b) return '';
+        var v0 = a ? a.displayValue : '0';
+        var v1 = b ? b.displayValue : '0';
+        var n0 = parseFloat(v0) || 0;
+        var n1 = parseFloat(v1) || 0;
+        var tot = (n0 + n1) || 1;
+        var p0 = Math.round((n0 / tot) * 100);
+        var p1 = 100 - p0;
+        return '<div class="space-y-1">' +
+          '<div class="flex items-center justify-between font-bold text-xs">' +
+            '<span class="text-emerald-400">' + esc(v0) + '</span>' +
+            '<span class="text-slate-300">' + esc(STAT_LABELS[k] || k) + '</span>' +
+            '<span class="text-sky-400">' + esc(v1) + '</span>' +
+          '</div>' +
+          '<div class="h-2 rounded-full bg-slate-800 overflow-hidden flex">' +
+            '<div style="width:' + p0 + '%" class="bg-emerald-500 h-full"></div>' +
+            '<div style="width:' + p1 + '%" class="bg-sky-500 h-full"></div>' +
+          '</div>' +
+        '</div>';
+      }).filter(Boolean).join('');
+      body.innerHTML = rows || '<div class="text-center py-8 text-slate-400">لا توجد إحصائيات متاحة حالياً.</div>';
+      return;
+    }
+
+    if (modalTab === 'lineups') {
+      var rosters = modalSummary.rosters || [];
+      if (!rosters.length) {
+        body.innerHTML = '<div class="text-center py-8 text-slate-400">التشكيلة الرسمية تُنشر عادةً قبل بداية المباراة بساعة.</div>';
+        return;
+      }
+      body.innerHTML = '<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">' + rosters.map(function(r) {
+        var starters = (r.roster || []).filter(function(p) { return p.starter; });
+        var list = starters.length ? starters : (r.roster || []).slice(0, 11);
+        var tName = (r.team && r.team.displayName) || '';
+        var form = r.formation ? ' (' + r.formation + ')' : '';
+        return '<div class="bg-slate-950/70 border border-slate-800 rounded-xl p-3 space-y-2">' +
+          '<div class="font-black text-emerald-400 border-b border-slate-800 pb-1.5">' + esc(tName + form) + '</div>' +
+          '<div class="space-y-1.5">' + list.map(function(p) {
+            var nm = (p.athlete && p.athlete.displayName) || '';
+            var num = p.jersey || '-';
+            var pos = (p.position && p.position.abbreviation) || '';
+            return '<div class="flex items-center justify-between gap-2 text-slate-200">' +
+              '<div class="flex items-center gap-2 min-w-0"><span class="w-5 h-5 rounded bg-slate-800 text-slate-300 text-[10px] font-bold flex items-center justify-center shrink-0">' + esc(num) + '</span><span class="truncate">' + esc(nm) + '</span></div>' +
+              '<span class="text-[10px] text-slate-500 shrink-0">' + esc(pos) + '</span>' +
+            '</div>';
+          }).join('') + '</div></div>';
+      }).join('') + '</div>';
+    }
+  }
+
+  window.ktOpenMatch = async function(leagueId, eventId) {
+    ensureModal();
+    var modal = document.getElementById('kt-match-modal');
+    var scoreEl = document.getElementById('ktm-score');
+    var bodyEl = document.getElementById('ktm-body');
+    var lgEl = document.getElementById('ktm-league');
+    modal.classList.remove('hidden');
+
+    var ev = allEvents.find(function(x) { return String(x.id) === String(eventId); });
+    if (ev) {
+      lgEl.textContent = ev.leagueName;
+      var mid = ev.state === 'pre'
+        ? '<div class="text-lg font-black text-sky-400">' + esc(fmtLocalTime(ev.date)) + '</div><div class="text-[11px] text-slate-400">لم تبدأ بعد</div>'
+        : '<div class="text-2xl font-black text-white">' + esc(ev.homeScore) + ' - ' + esc(ev.awayScore) + '</div><div class="text-[11px] font-bold ' + (ev.state === 'in' ? 'text-red-400 animate-pulse' : 'text-slate-400') + '">' + esc(ev.state === 'in' ? ('● ' + (ev.detail || ev.clock || 'مباشر')) : 'انتهت المباراة') + '</div>';
+      scoreEl.innerHTML =
+        '<div class="grid grid-cols-3 items-center text-center gap-2">' +
+          '<div class="flex flex-col items-center gap-1.5">' + (ev.homeLogo ? '<img src="' + esc(ev.homeLogo) + '" class="w-11 h-11 object-contain" />' : '') + '<span class="font-bold text-xs sm:text-sm text-white">' + esc(ev.homeName) + '</span></div>' +
+          '<div>' + mid + '</div>' +
+          '<div class="flex flex-col items-center gap-1.5">' + (ev.awayLogo ? '<img src="' + esc(ev.awayLogo) + '" class="w-11 h-11 object-contain" />' : '') + '<span class="font-bold text-xs sm:text-sm text-white">' + esc(ev.awayName) + '</span></div>' +
+        '</div>';
+    } else {
+      scoreEl.innerHTML = '';
+    }
+
+    bodyEl.innerHTML = '<div class="text-center py-8 text-slate-400">جاري تحميل تفاصيل وإحصائيات المباراة...</div>';
+    modalSummary = null;
+
+    try {
+      var res = await fetch('https://site.api.espn.com/apis/site/v2/sports/soccer/' + encodeURIComponent(leagueId) + '/summary?event=' + encodeURIComponent(eventId));
+      modalSummary = await res.json();
+      ktModalTab('events');
+    } catch (e) {
+      bodyEl.innerHTML = '<div class="text-center py-8 text-red-400">تعذر جلب تفاصيل المباراة حالياً.</div>';
+    }
+  };
 
   window.ktSetDay = function(offset) {
     dayOffset = offset;
@@ -196,8 +382,10 @@
   window.ktToggleLiveOnly = function() {
     liveOnly = !liveOnly;
     var lp = document.getElementById('kt-live-pill');
-    if (lp) lp.classList.toggle('ring-2', liveOnly);
-    if (lp) lp.classList.toggle('ring-red-400', liveOnly);
+    if (lp) {
+      lp.classList.toggle('ring-2', liveOnly);
+      lp.classList.toggle('ring-red-400', liveOnly);
+    }
     renderTicker();
   };
 
