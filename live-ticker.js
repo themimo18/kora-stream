@@ -5,7 +5,7 @@
     ms.textContent =
       'html,body{max-width:100%;overflow-x:clip;}' +
       '#kt-live-ticker,#league-tabs,#team-chips{min-width:0!important;max-width:100%;-webkit-overflow-scrolling:touch;touch-action:pan-x;scrollbar-width:none;}' +
-      '#kt-live-ticker::-webkit-scrollbar,#league-tabs::-webkit-scrollbar,#team-chips::-webkit-scrollbar{display:none;}';
+      '#kt-live-ticker::-webkit-scrollbar,#league-tabs::-webkit-scrollbar,#team-chips::-webkit-scrollbar{display:none;}#kt-live-ticker.kt-auto-active{gap:0!important;scroll-behavior:auto!important;-webkit-mask-image:linear-gradient(to right,transparent 0%,#000 18px,#000 calc(100% - 18px),transparent 100%);mask-image:linear-gradient(to right,transparent 0%,#000 18px,#000 calc(100% - 18px),transparent 100%);}.kt-tk-group{display:flex;align-items:center;gap:8px;padding-right:8px;flex-shrink:0;}';
     document.head.appendChild(ms);
   }
   var LEAGUES = [
@@ -141,6 +141,104 @@
     }
   }
 
+  var marqueeRaf = null;
+  var marqueePaused = false;
+  var marqueeResumeTimer = null;
+  var marqueePos = 0;
+  var marqueeLastTs = 0;
+  var marqueeBound = false;
+
+  function stopMarquee() {
+    if (marqueeRaf) {
+      cancelAnimationFrame(marqueeRaf);
+      marqueeRaf = null;
+    }
+    marqueeLastTs = 0;
+  }
+
+  function bindMarqueeInteractions(box) {
+    if (marqueeBound || !box) return;
+    marqueeBound = true;
+
+    box.addEventListener('mouseenter', function() {
+      marqueePaused = true;
+      clearTimeout(marqueeResumeTimer);
+    });
+    box.addEventListener('mouseleave', function() {
+      marqueePos = box.scrollLeft;
+      marqueePaused = false;
+    });
+    box.addEventListener('touchstart', function() {
+      marqueePaused = true;
+      clearTimeout(marqueeResumeTimer);
+    }, { passive: true });
+    box.addEventListener('touchend', function() {
+      clearTimeout(marqueeResumeTimer);
+      marqueeResumeTimer = setTimeout(function() {
+        marqueePos = box.scrollLeft;
+        marqueePaused = false;
+      }, 2000);
+    }, { passive: true });
+    box.addEventListener('wheel', function() {
+      marqueePaused = true;
+      clearTimeout(marqueeResumeTimer);
+      marqueeResumeTimer = setTimeout(function() {
+        marqueePos = box.scrollLeft;
+        marqueePaused = false;
+      }, 2000);
+    }, { passive: true });
+  }
+
+  function startMarquee(box, cardsHtml) {
+    stopMarquee();
+    bindMarqueeInteractions(box);
+
+    box.classList.remove('kt-auto-active');
+    box.setAttribute('dir', 'ltr');
+    box.innerHTML = '<div class="kt-tk-group">' + cardsHtml + '</div>';
+
+    var firstGroup = box.firstElementChild;
+    if (!firstGroup) return;
+
+    // Only auto-scroll if content overflows container
+    if (firstGroup.offsetWidth <= box.clientWidth + 10) {
+      box.setAttribute('dir', 'rtl');
+      return;
+    }
+
+    // Duplicate group once for seamless infinite loop
+    box.classList.add('kt-auto-active');
+    box.innerHTML =
+      '<div class="kt-tk-group">' + cardsHtml + '</div>' +
+      '<div class="kt-tk-group" aria-hidden="true">' + cardsHtml + '</div>';
+
+    var loopWidth = box.firstElementChild ? box.firstElementChild.offsetWidth : 0;
+    if (!loopWidth) return;
+
+    marqueePos = marqueePos % loopWidth;
+    box.scrollLeft = marqueePos;
+    var SPEED_PX_PER_SEC = 42;
+
+    function tick(ts) {
+      if (!document.body.contains(box)) return;
+      if (!marqueeLastTs) marqueeLastTs = ts;
+      var dt = Math.min((ts - marqueeLastTs) / 1000, 0.05);
+      marqueeLastTs = ts;
+
+      if (!marqueePaused && !document.hidden) {
+        var curLoop = box.firstElementChild ? box.firstElementChild.offsetWidth : loopWidth;
+        if (curLoop > 0) {
+          marqueePos += SPEED_PX_PER_SEC * dt;
+          if (marqueePos >= curLoop) marqueePos -= curLoop;
+          box.scrollLeft = marqueePos;
+        }
+      }
+      marqueeRaf = requestAnimationFrame(tick);
+    }
+
+    marqueeRaf = requestAnimationFrame(tick);
+  }
+
   function renderTicker() {
     var box = document.getElementById('kt-live-ticker');
     if (!box) return;
@@ -151,6 +249,9 @@
     });
 
     if (!list.length) {
+      stopMarquee();
+      box.classList.remove('kt-auto-active');
+      box.setAttribute('dir', 'rtl');
       var msg = liveOnly
         ? 'لا توجد مباريات جارية الآن في الدوريات الكبرى.'
         : 'لا توجد مباريات مبرمجة في هذا اليوم لهذا التصنيف.';
@@ -158,7 +259,7 @@
       return;
     }
 
-    box.innerHTML = list.map(function(m) {
+    var cardsHtml = list.map(function(m) {
       var centerBadge = '';
       if (m.state === 'in') {
         var min = m.detail || m.clock || 'LIVE';
@@ -179,12 +280,14 @@
       var aImg = m.awayLogo ? '<img src="' + esc(m.awayLogo) + '" alt="' + esc(m.awayName) + '" class="w-6 h-6 object-contain shrink-0" loading="lazy" />' : '';
       var cardBorder = m.state === 'in' ? 'border-red-500/60 bg-slate-900' : 'border-slate-800 bg-slate-900/90 hover:border-sky-500/60';
 
-      return '<button type="button" onclick="ktOpenMatch(\'' + esc(m.leagueId) + '\',\'' + esc(m.id) + '\')" title="تفاصيل وإحصائيات: ' + esc(m.homeName + ' vs ' + m.awayName) + '" class="cursor-pointer flex items-center gap-2 px-2.5 py-1.5 rounded-xl border ' + cardBorder + ' shrink-0 transition">' +
+      return '<button dir="rtl" type="button" onclick="ktOpenMatch(\'' + esc(m.leagueId) + '\',\'' + esc(m.id) + '\')" title="تفاصيل وإحصائيات: ' + esc(m.homeName + ' vs ' + m.awayName) + '" class="cursor-pointer flex items-center gap-2 px-2.5 py-1.5 rounded-xl border ' + cardBorder + ' shrink-0 transition">' +
         '<div class="flex items-center gap-1.5">' + hImg + '<span class="text-[11px] font-bold text-slate-200 max-w-[68px] truncate hidden md:inline">' + esc(m.homeName) + '</span></div>' +
         centerBadge +
         '<div class="flex items-center gap-1.5"><span class="text-[11px] font-bold text-slate-200 max-w-[68px] truncate hidden md:inline">' + esc(m.awayName) + '</span>' + aImg + '</div>' +
       '</button>';
     }).join('');
+
+    startMarquee(box, cardsHtml);
   }
 
   // --- Match Details Modal (Goals, Stats, Lineups) ---
