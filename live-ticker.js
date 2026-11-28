@@ -43,6 +43,20 @@
     var box = document.getElementById('kt-live-ticker');
     if (!box) return;
     var dateStr = getDateParam(dayOffset);
+    var cacheKey = 'kt_ticker_cache_' + dateStr;
+    try {
+      var cached = JSON.parse(sessionStorage.getItem(cacheKey) || 'null');
+      if (cached && (Date.now() - cached.ts) < 55000) {
+        allEvents = cached.data || [];
+        if (dayOffset === 0) {
+          window.ktTodayEvents = allEvents;
+          window.dispatchEvent(new CustomEvent("kt-ticker-updated", { detail: allEvents }));
+        }
+        updateLiveBadge();
+        renderTicker();
+        return;
+      }
+    } catch (e) {}
     var results = await Promise.allSettled(LEAGUES.map(async function(lg) {
       var url = 'https://site.api.espn.com/apis/site/v2/sports/soccer/' + lg.id + '/scoreboard?dates=' + dateStr;
       var res = await fetch(url);
@@ -93,6 +107,7 @@
       window.ktTodayEvents = merged;
       window.dispatchEvent(new CustomEvent("kt-ticker-updated", { detail: merged }));
     }
+    try { sessionStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data: merged })); } catch (e) {}
     updateLiveBadge();
     renderTicker();
   }

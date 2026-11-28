@@ -1,10 +1,23 @@
 (function() {
+  if (!document.getElementById('kt-cd-css')) {
+    var st = document.createElement('style');
+    st.id = 'kt-cd-css';
+    st.textContent =
+      '.kt-cd-slot{margin-top:6px;display:flex;justify-content:center;align-items:center;}' +
+      '.kt-cd-badge{display:inline-flex;align-items:center;gap:5px;padding:2px 10px;border-radius:9999px;font-size:11px;font-weight:700;white-space:nowrap;line-height:1.4;}' +
+      '.kt-cd-pre{background:rgba(15,23,42,.95);color:#34d399;border:1px solid rgba(16,185,129,.35);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;direction:ltr;}' +
+      '.kt-cd-soon{background:rgba(245,158,11,.18);color:#fbbf24;border:1px solid rgba(245,158,11,.45);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;direction:ltr;}' +
+      '.kt-cd-live{background:rgba(239,68,68,.2);color:#f87171;border:1px solid rgba(239,68,68,.45);font-weight:800;}' +
+      '.kt-cd-post{background:#1e293b;color:#94a3b8;border:1px solid #334155;}' +
+      '.kt-cd-dot{width:6px;height:6px;border-radius:9999px;background:#ef4444;display:inline-block;}';
+    document.head.appendChild(st);
+  }
+
   var STOP_WORDS = {
     fc:1, cf:1, sc:1, ac:1, afc:1, city:1, united:1, utd:1, town:1, club:1,
     real:1, athletic:1, sporting:1, de:1, la:1, el:1, al:1, saint:1, st:1,
     calcio:1, as:1, ss:1, us:1, rc:1, cd:1, ud:1, sd:1, vs:1, wanderers:1, rovers:1, albion:1
   };
-
   var ALIASES = {
     'man united': 'manchester united',
     'man utd': 'manchester united',
@@ -20,6 +33,10 @@
     'betis': 'real betis',
     'rayo': 'rayo vallecano'
   };
+
+  var trackedCards = [];
+  var isWorking = false;
+  var debounceTimer = null;
 
   function norm(s) {
     return String(s || '')
@@ -47,9 +64,7 @@
     var events = window.ktTodayEvents || [];
     for (var i = 0; i < events.length; i++) {
       var ev = events[i];
-      if (teamInCard(cardNorm, ev.homeName) && teamInCard(cardNorm, ev.awayName)) {
-        return ev;
-      }
+      if (teamInCard(cardNorm, ev.homeName) && teamInCard(cardNorm, ev.awayName)) return ev;
     }
     return null;
   }
@@ -61,23 +76,17 @@
     return new Date(now.getFullYear(), now.getMonth(), now.getDate(), parseInt(m[1], 10), parseInt(m[2], 10), 0, 0).getTime();
   }
 
-  function pad2(n) {
-    return n < 10 ? '0' + n : '' + n;
-  }
-
+  function pad2(n) { return n < 10 ? '0' + n : '' + n; }
   function fmtCountdown(sec) {
-    var h = Math.floor(sec / 3600);
-    var m = Math.floor((sec % 3600) / 60);
-    var s = sec % 60;
-    return pad2(h) + ':' + pad2(m) + ':' + pad2(s);
+    return pad2(Math.floor(sec / 3600)) + ':' + pad2(Math.floor((sec % 3600) / 60)) + ':' + pad2(sec % 60);
   }
 
   function findCardRoot(el, container) {
     var cur = el;
     var best = null;
     while (cur && cur !== container && cur !== document.body) {
-      var cls = cur.className || '';
-      if (typeof cls === 'string' && (cls.indexOf('rounded-2xl') !== -1 || cls.indexOf('rounded-xl') !== -1 || cur.hasAttribute('onclick'))) {
+      var cls = typeof cur.className === 'string' ? cur.className : '';
+      if (cls.indexOf('rounded-2xl') !== -1 || cls.indexOf('rounded-xl') !== -1 || cur.hasAttribute('onclick')) {
         best = cur;
         if (cur.hasAttribute('onclick') || cls.indexOf('border') !== -1) break;
       }
@@ -87,74 +96,84 @@
   }
 
   function enhanceCards() {
+    if (isWorking) return;
     var container = document.getElementById('matches-list');
     if (!container) return;
 
-    var allEls = container.querySelectorAll('span, div, p');
-    var seenCards = new Set();
+    isWorking = true;
+    try {
+      // Drop detached cards
+      trackedCards = trackedCards.filter(function(item) { return document.body.contains(item.card); });
 
-    for (var i = 0; i < allEls.length; i++) {
-      var el = allEls[i];
-      if (el.children.length > 0) continue;
-      if (el.closest('.kt-cd-slot')) continue;
+      var leaves = container.querySelectorAll('span, div, p');
+      var seen = new Set(trackedCards.map(function(x) { return x.card; }));
 
-      var txt = (el.textContent || '').trim();
-      var isTime = /^\d{1,2}:\d{2}$/.test(txt);
-      var isVs = /^VS$/i.test(txt);
-      if (!isTime && !isVs) continue;
+      for (var i = 0; i < leaves.length; i++) {
+        var el = leaves[i];
+        if (el.children.length > 0) continue;
+        if (el.closest('.kt-cd-slot')) continue;
 
-      var card = findCardRoot(el, container);
-      if (!card || seenCards.has(card) || card.querySelector('.kt-cd-slot')) continue;
-      seenCards.add(card);
+        var txt = (el.textContent || '').trim();
+        if (!/^VS$/i.test(txt) && !/^\d{1,2}:\d{2}$/.test(txt)) continue;
 
-      var centerBox = el.parentElement;
-      if (!centerBox) continue;
+        var card = findCardRoot(el, container);
+        if (!card || seen.has(card) || card.querySelector('.kt-cd-slot')) continue;
+        seen.add(card);
 
-      // Capture time string and VS element inside this card
-      var timeStr = isTime ? txt : '';
-      var vsEl = isVs ? el : null;
-      var innerLeaves = card.querySelectorAll('span, div, p');
-      for (var j = 0; j < innerLeaves.length; j++) {
-        var leaf = innerLeaves[j];
-        if (leaf.children.length > 0) continue;
-        var lt = (leaf.textContent || '').trim();
-        if (!timeStr && /^\d{1,2}:\d{2}$/.test(lt)) timeStr = lt;
-        if (!vsEl && /^VS$/i.test(lt)) vsEl = leaf;
+        var timeStr = '';
+        var vsEl = null;
+        var inner = card.querySelectorAll('span, div, p');
+        for (var j = 0; j < inner.length; j++) {
+          var lf = inner[j];
+          if (lf.children.length > 0) continue;
+          var lt = (lf.textContent || '').trim();
+          if (!timeStr && /^\d{1,2}:\d{2}$/.test(lt)) timeStr = lt;
+          if (!vsEl && /^VS$/i.test(lt)) vsEl = lf;
+        }
+
+        var anchorParent = (vsEl && vsEl.parentElement) ? vsEl.parentElement : el.parentElement;
+        if (!anchorParent) continue;
+
+        var slot = document.createElement('div');
+        slot.className = 'kt-cd-slot';
+        var badge = document.createElement('span');
+        badge.className = 'kt-cd-badge kt-cd-pre';
+        var txtNode = document.createTextNode('');
+        badge.appendChild(txtNode);
+        slot.appendChild(badge);
+        anchorParent.appendChild(slot);
+
+        trackedCards.push({
+          card: card,
+          badge: badge,
+          txtNode: txtNode,
+          vsEl: vsEl,
+          timeStr: timeStr,
+          cardNorm: norm(card.textContent),
+          lastState: ''
+        });
       }
-
-      if (vsEl && !vsEl.dataset.ktOrig) {
-        vsEl.dataset.ktOrig = vsEl.textContent.trim();
-        vsEl.setAttribute('data-kt-vs', '1');
-      }
-
-      card.dataset.ktTime = timeStr;
-      card.dataset.ktNorm = norm(card.textContent);
-
-      var slot = document.createElement('div');
-      slot.className = 'kt-cd-slot mt-1.5 flex items-center justify-center';
-      centerBox.appendChild(slot);
+    } finally {
+      isWorking = false;
     }
 
     updateAllCountdowns();
   }
 
   function updateAllCountdowns() {
-    var slots = document.querySelectorAll('#matches-list .kt-cd-slot');
-    if (!slots.length) return;
+    if (!trackedCards.length) return;
     var now = Date.now();
 
-    for (var i = 0; i < slots.length; i++) {
-      var slot = slots[i];
-      var card = findCardRoot(slot, document.getElementById('matches-list'));
-      if (!card) continue;
+    for (var i = 0; i < trackedCards.length; i++) {
+      var item = trackedCards[i];
+      if (!document.body.contains(item.card)) continue;
 
-      var ev = findEspnMatch(card.dataset.ktNorm || '');
-      var kickoffMs = ev && ev.date ? new Date(ev.date).getTime() : parseLocalTime(card.dataset.ktTime);
-      var vsEl = card.querySelector('[data-kt-vs="1"]');
+      var ev = findEspnMatch(item.cardNorm);
+      var kickoffMs = (ev && ev.date) ? new Date(ev.date).getTime() : parseLocalTime(item.timeStr);
 
       var state = 'pre';
       if (ev && ev.state) {
-        state = ev.state; // 'pre', 'in', 'post'
+        state = ev.state;
       } else if (kickoffMs) {
         var elapsedMin = (now - kickoffMs) / 60000;
         if (elapsedMin >= 115) state = 'post';
@@ -162,31 +181,55 @@
         else state = 'pre';
       }
 
+      var nextCls = 'kt-cd-badge kt-cd-pre';
+      var nextTxt = '';
+      var stateKey = state;
+
       if (state === 'post') {
-        slot.innerHTML = '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-800 text-slate-400 border border-slate-700 whitespace-nowrap">✓ انتهت المباراة</span>';
-        card.style.opacity = '0.72';
-        card.style.boxShadow = '';
-        if (vsEl && ev) {
-          vsEl.textContent = ev.homeScore + ' - ' + ev.awayScore;
+        nextCls = 'kt-cd-badge kt-cd-post';
+        nextTxt = '✓ انتهت المباراة';
+        if (item.lastState !== 'post') {
+          item.card.style.opacity = '0.72';
+          item.card.style.boxShadow = '';
+        }
+        if (item.vsEl && ev) {
+          var ftScore = ev.homeScore + ' - ' + ev.awayScore;
+          if (item.vsEl.textContent !== ftScore) item.vsEl.textContent = ftScore;
         }
       } else if (state === 'in') {
-        var liveLabel = (ev && (ev.detail || ev.clock)) ? ('مباشر • ' + (ev.detail || ev.clock)) : 'مباشر الآن';
-        slot.innerHTML = '<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-red-500/20 text-red-400 border border-red-500/40 whitespace-nowrap"><span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>' + liveLabel + '</span>';
-        card.style.opacity = '1';
-        card.style.boxShadow = '0 0 0 1px rgba(239, 68, 68, 0.45)';
-        if (vsEl && ev) {
-          vsEl.textContent = ev.homeScore + ' - ' + ev.awayScore;
+        nextCls = 'kt-cd-badge kt-cd-live';
+        nextTxt = (ev && (ev.detail || ev.clock)) ? ('● مباشر • ' + (ev.detail || ev.clock)) : '● مباشر الآن';
+        if (item.lastState !== 'in') {
+          item.card.style.opacity = '1';
+          item.card.style.boxShadow = '0 0 0 1px rgba(239,68,68,0.45)';
+        }
+        if (item.vsEl && ev) {
+          var liveScore = ev.homeScore + ' - ' + ev.awayScore;
+          if (item.vsEl.textContent !== liveScore) item.vsEl.textContent = liveScore;
         }
       } else if (kickoffMs && kickoffMs > now) {
         var diffSec = Math.floor((kickoffMs - now) / 1000);
-        var clockStr = fmtCountdown(diffSec);
         if (diffSec <= 900) {
-          slot.innerHTML = '<span dir="ltr" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-amber-500/20 text-amber-400 border border-amber-500/40 font-mono whitespace-nowrap">🔥 ' + clockStr + '</span>';
+          stateKey = 'soon';
+          nextCls = 'kt-cd-badge kt-cd-soon';
+          nextTxt = '🔥 ' + fmtCountdown(diffSec);
         } else {
-          slot.innerHTML = '<span dir="ltr" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-800/90 text-emerald-400 border border-emerald-500/30 font-mono whitespace-nowrap">⏳ ' + clockStr + '</span>';
+          stateKey = 'pre';
+          nextCls = 'kt-cd-badge kt-cd-pre';
+          nextTxt = '⏳ ' + fmtCountdown(diffSec);
         }
-        card.style.opacity = '1';
-        card.style.boxShadow = '';
+        if (item.lastState !== stateKey) {
+          item.card.style.opacity = '1';
+          item.card.style.boxShadow = '';
+        }
+      }
+
+      if (item.lastState !== stateKey) {
+        item.badge.className = nextCls;
+        item.lastState = stateKey;
+      }
+      if (item.txtNode.nodeValue !== nextTxt) {
+        item.txtNode.nodeValue = nextTxt;
       }
     }
   }
@@ -194,17 +237,25 @@
   function init() {
     var container = document.getElementById('matches-list');
     if (container) {
-      var obs = new MutationObserver(function() { enhanceCards(); });
+      var obs = new MutationObserver(function(muts) {
+        if (isWorking) return;
+        for (var i = 0; i < muts.length; i++) {
+          var t = muts[i].target;
+          if (t && t.closest && t.closest('.kt-cd-slot')) continue;
+          if (muts[i].addedNodes && muts[i].addedNodes.length) {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(enhanceCards, 120);
+            break;
+          }
+        }
+      });
       obs.observe(container, { childList: true, subtree: true });
     }
     window.addEventListener('kt-ticker-updated', updateAllCountdowns);
-    enhanceCards();
+    setTimeout(enhanceCards, 200);
     setInterval(updateAllCountdowns, 1000);
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
 })();
