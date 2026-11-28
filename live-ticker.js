@@ -318,6 +318,7 @@
   }
 
   window.ktOpenMatch = async function(leagueId, eventId) {
+    if (typeof window.ktOpenPreMatch === "function") return window.ktOpenPreMatch(leagueId, eventId);
     ensureModal();
     var modal = document.getElementById('kt-match-modal');
     var scoreEl = document.getElementById('ktm-score');
