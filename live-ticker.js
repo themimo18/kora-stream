@@ -89,6 +89,10 @@
     });
 
     allEvents = merged;
+    if (dayOffset === 0) {
+      window.ktTodayEvents = merged;
+      window.dispatchEvent(new CustomEvent("kt-ticker-updated", { detail: merged }));
+    }
     updateLiveBadge();
     renderTicker();
   }
