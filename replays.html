@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>إعادة المباريات كاملة وملخصات الأهداف اليوم | KORA TODAY</title>
-  <meta name="description" content="شاهد إعادة المباريات كاملة وملخصات وأهداف مباريات اليوم في الدوري الإنجليزي، الدوري الإسباني، ودوري أبطال أوروبا بجودة عالية على كورة توداي." />
+  <title>ملخصات وأهداف مباريات اليوم وإعادة المباريات | KORA TODAY</title>
+  <meta name="description" content="شاهد ملخصات وأهداف مباريات اليوم بجودة عالية في الدوري الإنجليزي، الدوري الإسباني، دوري أبطال أوروبا، والبطولة المغربية على كورة توداي." />
   <link rel="canonical" href="https://koratoday.xyz/replays.html" />
   <link rel="icon" href="favicon.png" type="image/png" />
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-REBZQPV4BQ"></script>
@@ -24,19 +24,18 @@
         <span class="w-3 h-3 rounded-full bg-red-500 animate-pulse"></span>
         <span class="text-xl font-black tracking-tight text-emerald-400">KORA TODAY</span>
       </a>
-      <span id="rp-count" class="text-xs bg-slate-800 px-3 py-1 rounded-full text-slate-300">إعادة وملخصات</span>
+      <span id="rp-count" class="text-xs bg-slate-800 px-3 py-1 rounded-full text-slate-300">ملخصات وأهداف</span>
     </div>
-  <nav class="max-w-4xl mx-auto px-4 pb-2.5 flex items-center gap-2 overflow-x-auto text-xs font-bold">
-    <a href="index.html" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 whitespace-nowrap transition">⚽ مباريات اليوم</a>
-    <a href="bein-sports-hd.html" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 whitespace-nowrap transition">📺 قنوات beIN HD</a>
-    <a href="replays.html" class="px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 whitespace-nowrap">🎬 إعادة وملخصات</a>
-  </nav>
+    <nav class="max-w-4xl mx-auto px-4 pb-2.5 flex items-center gap-2 overflow-x-auto text-xs font-bold">
+      <a href="index.html" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 whitespace-nowrap transition">⚽ مباريات اليوم</a>
+      <a href="replays.html" class="px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 whitespace-nowrap">🎬 ملخصات وأهداف</a>
+    </nav>
   </header>
 
   <main class="max-w-4xl w-full mx-auto px-4 py-5 space-y-5 flex-1">
     <div>
-      <h1 class="text-xl sm:text-2xl font-black text-white">🎬 إعادة المباريات وملخصات الأهداف</h1>
-      <p class="text-xs sm:text-sm text-slate-400 mt-1">فاتك الماتش؟ شاهد الإعادة الكاملة أو ملخص الأهداف بجودة عالية في أي وقت.</p>
+      <h1 class="text-xl sm:text-2xl font-black text-white">🎬 ملخصات وأهداف مباريات اليوم</h1>
+      <p class="text-xs sm:text-sm text-slate-400 mt-1">فاتك الماتش؟ شاهد ملخص الأهداف أو الإعادة الكاملة بجودة عالية في أي وقت.</p>
     </div>
 
     <section id="rp-player-box" class="hidden bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden shadow-2xl">
@@ -46,26 +45,26 @@
       </div>
       <div class="aspect-video bg-black">
         <video id="rp-video" class="w-full h-full hidden" controls autoplay playsinline></video>
-        <iframe id="rp-iframe" class="w-full h-full hidden" frameborder="0" allowfullscreen referrerpolicy="no-referrer" allow="autoplay; fullscreen; encrypted-media"></iframe>
+        <iframe id="rp-iframe" class="w-full h-full hidden" frameborder="0" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"></iframe>
       </div>
     </section>
 
     <div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
       <div class="flex items-center gap-2 overflow-x-auto">
         <button onclick="setType('all')" id="tp-all" class="tp-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-500 text-slate-950 whitespace-nowrap">الكل</button>
-        <button onclick="setType('replay')" id="tp-replay" class="tp-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 whitespace-nowrap">إعادة كاملة</button>
         <button onclick="setType('highlight')" id="tp-highlight" class="tp-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 whitespace-nowrap">ملخصات وأهداف</button>
+        <button onclick="setType('replay')" id="tp-replay" class="tp-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 whitespace-nowrap">إعادة كاملة</button>
       </div>
       <input id="rp-search" oninput="renderReplays()" type="search" placeholder="ابحث عن فريق أو بطولة..." class="bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 sm:w-64" />
     </div>
 
-    <section id="replays-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      <div class="col-span-full text-center py-10 text-slate-500 text-sm">جاري تحميل المباريات...</div>
+    <section id="replays-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div class="col-span-full text-center py-10 text-slate-500 text-sm">جاري تحميل الملخصات...</div>
     </section>
 
     <section class="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 text-xs text-slate-400 leading-relaxed space-y-2">
-      <h3 class="text-sm font-bold text-emerald-400">ملخصات وأهداف مباريات اليوم وإعادة كاملة</h3>
-      <p>يتم تحديث قسم إعادة المباريات على كورة توداي يومياً مباشرة بعد نهاية المباريات الكبرى في الدوري الإنجليزي الممتاز، الدوري الإسباني، دوري أبطال أوروبا، والدوري السعودي والمغربي.</p>
+      <h3 class="text-sm font-bold text-emerald-400">ملخصات وأهداف مباريات اليوم على كورة توداي</h3>
+      <p>يتم تحديث قسم ملخصات المباريات يومياً فور نهاية أقوى مواجهات الدوري الإنجليزي الممتاز، الدوري الإسباني، دوري أبطال أوروبا، الدوري السعودي، والبطولة الاحترافية المغربية.</p>
     </section>
   </main>
 
@@ -85,13 +84,19 @@
       });
     }
 
+    function getYtId(raw) {
+      var u = (raw || '').trim();
+      var m = u.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|live\/|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+      return m ? m[1] : null;
+    }
+
     function toEmbed(raw) {
       var u = (raw || '').trim();
       var m = u.match(/src=["']([^"']+)["']/i);
       if (m) u = m[1];
-      var yt = u.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|live\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
-      if (yt) return 'https://www.youtube.com/embed/' + yt[1] + '?autoplay=1&rel=0';
-      return u;
+      var ytId = getYtId(u);
+      if (ytId) return { url: 'https://www.youtube.com/embed/' + ytId + '?autoplay=1&rel=0', isYt: true };
+      return { url: u, isYt: false };
     }
 
     window.playReplay = function(id) {
@@ -100,7 +105,7 @@
       var box = document.getElementById('rp-player-box');
       var video = document.getElementById('rp-video');
       var iframe = document.getElementById('rp-iframe');
-      var url = toEmbed(r.video_url);
+      var parsed = toEmbed(r.video_url);
 
       if (hlsInst) { hlsInst.destroy(); hlsInst = null; }
       video.pause(); video.removeAttribute('src'); video.classList.add('hidden');
@@ -109,17 +114,18 @@
       document.getElementById('rp-player-title').textContent = r.title + (r.score ? ' (' + r.score + ')' : '');
       box.classList.remove('hidden');
 
-      if (url.indexOf('.m3u8') !== -1) {
+      if (parsed.url.indexOf('.m3u8') !== -1) {
         video.classList.remove('hidden');
         if (window.Hls && Hls.isSupported()) {
           hlsInst = new Hls();
-          hlsInst.loadSource(url);
+          hlsInst.loadSource(parsed.url);
           hlsInst.attachMedia(video);
         } else {
-          video.src = url;
+          video.src = parsed.url;
         }
       } else {
-        iframe.src = url;
+        iframe.referrerPolicy = parsed.isYt ? 'strict-origin-when-cross-origin' : 'no-referrer';
+        iframe.src = parsed.url;
         iframe.classList.remove('hidden');
       }
       box.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -154,20 +160,29 @@
       });
       var grid = document.getElementById('replays-grid');
       if (!list.length) {
-        grid.innerHTML = '<div class="col-span-full bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center space-y-2"><div class="text-3xl">🎬</div><p class="text-sm text-slate-400">لا توجد مباريات مضافة حالياً. سيتم إضافة الملخصات والإعادات فور نهاية المباريات.</p></div>';
+        grid.innerHTML = '<div class="col-span-full bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center space-y-2"><div class="text-3xl">🎬</div><p class="text-sm text-slate-400">لا توجد ملخصات مضافة حالياً. سيتم نشر الأهداف فور نهاية المباريات.</p></div>';
         return;
       }
       grid.innerHTML = list.map(function(r) {
         var isHL = r.type === 'highlight';
+        var ytId = getYtId(r.video_url);
+        var thumb = ytId
+          ? '<div class="relative aspect-video bg-black overflow-hidden">' +
+              '<img src="https://img.youtube.com/vi/' + ytId + '/hqdefault.jpg" alt="' + esc(r.title) + '" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" />' +
+              '<div class="absolute inset-0 bg-black/30 flex items-center justify-center"><span class="w-12 h-12 rounded-full bg-emerald-500/90 text-slate-950 flex items-center justify-center text-lg font-black shadow-lg">▶</span></div>' +
+            '</div>'
+          : '';
         var badge = isHL
           ? '<span class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-400">ملخص وأهداف</span>'
           : '<span class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400">إعادة كاملة</span>';
         var score = r.score ? '<span class="text-xs font-black px-2 py-0.5 rounded bg-slate-800 text-white">' + esc(r.score) + '</span>' : '';
-        return '<div onclick="playReplay(' + r.id + ')" class="cursor-pointer bg-slate-900 hover:bg-slate-800/80 border border-slate-800 hover:border-emerald-500/50 rounded-2xl p-4 transition flex flex-col justify-between gap-3">' +
-          '<div class="flex items-center justify-between gap-2">' + badge + '<span class="text-[11px] text-slate-400">' + esc(r.league || '') + '</span></div>' +
-          '<div class="flex items-center justify-between gap-2"><h3 class="font-bold text-sm text-white">' + esc(r.title) + '</h3>' + score + '</div>' +
-          '<div class="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-slate-800/80"><span>📅 ' + esc(r.match_date || '') + '</span><span class="text-emerald-400 font-bold">▶ مشاهدة الآن</span></div>' +
-          '</div>';
+        return '<div onclick="playReplay(' + r.id + ')" class="group cursor-pointer bg-slate-900 hover:bg-slate-800/80 border border-slate-800 hover:border-emerald-500/50 rounded-2xl overflow-hidden transition flex flex-col">' +
+          thumb +
+          '<div class="p-4 flex-1 flex flex-col justify-between gap-2.5">' +
+            '<div class="flex items-center justify-between gap-2">' + badge + '<span class="text-[11px] text-slate-400">' + esc(r.league || '') + '</span></div>' +
+            '<div class="flex items-center justify-between gap-2"><h3 class="font-bold text-sm text-white">' + esc(r.title) + '</h3>' + score + '</div>' +
+            '<div class="flex items-center justify-between text-[11px] text-slate-400 pt-1.5 border-t border-slate-800/80"><span>📅 ' + esc(r.match_date || '') + '</span><span class="text-emerald-400 font-bold">▶ مشاهدة</span></div>' +
+          '</div></div>';
       }).join('');
     }
 
