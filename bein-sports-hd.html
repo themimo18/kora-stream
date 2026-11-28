@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>بث مباشر قنوات beIN Sports HD اليوم بدون تقطيع | KORA TODAY</title>
+  <meta name="description" content="شاهد بث مباشر لجميع قنوات بي ان سبورت beIN Sports 1, 2, 3, 4, 5, 6 HD وقناة الرياضية المغربية و SSC على مدار 24 ساعة بجودة عالية وبدون تقطيع على كورة توداي." />
+  <link rel="canonical" href="https://koratoday.xyz/bein-sports-hd.html" />
+  <link rel="icon" href="favicon.png" type="image/png" />
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-REBZQPV4BQ"></script>
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-REBZQPV4BQ');</script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script data-cfasync="false" src="https://capitalhospitals.org/1/81bc042dbb6306e6db561bfaf73fd14c"></script>
+  <script async="async" data-cfasync="false" src="https://czernik.org/21/e7ca79a9188232a1a0ad2aca769793dd"></script>
+  <script data-cfasync="false" src="https://czernik.org/14/0397d013c9111bdd099bca6620eb6f54"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans">
+  <header class="bg-slate-900/90 border-b border-slate-800 sticky top-0 z-50 backdrop-blur">
+    <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+      <a href="index.html" class="flex items-center gap-2">
+        <img src="favicon.png" alt="KORA TODAY" class="w-8 h-8 rounded-lg object-cover" />
+        <span class="w-3 h-3 rounded-full bg-red-500 animate-pulse"></span>
+        <span class="text-xl font-black tracking-tight text-emerald-400">KORA TODAY</span>
+      </a>
+      <span id="ch-count" class="text-xs bg-slate-800 px-3 py-1 rounded-full text-slate-300">قنوات 24/7</span>
+    </div>
+  <nav class="max-w-4xl mx-auto px-4 pb-2.5 flex items-center gap-2 overflow-x-auto text-xs font-bold">
+    <a href="index.html" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 whitespace-nowrap transition">⚽ مباريات اليوم</a>
+    <a href="bein-sports-hd.html" class="px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 whitespace-nowrap">📺 قنوات beIN HD</a>
+    <a href="replays.html" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 whitespace-nowrap transition">🎬 إعادة وملخصات</a>
+  </nav>
+  </header>
+
+  <main class="max-w-4xl w-full mx-auto px-4 py-5 space-y-5 flex-1">
+    <div>
+      <h1 class="text-xl sm:text-2xl font-black text-white">📺 بث مباشر قنوات beIN Sports HD (24/7)</h1>
+      <p class="text-xs sm:text-sm text-slate-400 mt-1">اختر القناة للمشاهدة المباشرة بجودة عالية HD وبدون تقطيع مع سيرفرات احتياطية.</p>
+    </div>
+
+    <section id="player-box" class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden shadow-2xl">
+      <div class="px-4 py-3 border-b border-slate-800 flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          <h2 id="active-ch-title" class="font-bold text-sm text-white">اختر قناة من الأسفل لبدء البث</h2>
+        </div>
+        <div id="server-btns" class="flex items-center gap-2"></div>
+      </div>
+      <div class="aspect-video bg-black flex items-center justify-center relative">
+        <div id="player-placeholder" class="text-center px-6 py-10 space-y-2">
+          <div class="text-4xl">📡</div>
+          <p id="placeholder-msg" class="text-sm text-slate-400">جاري تحميل القنوات المباشرة...</p>
+        </div>
+        <video id="hls-video" class="w-full h-full hidden" controls autoplay playsinline></video>
+        <iframe id="embed-iframe" class="w-full h-full hidden" frameborder="0" allowfullscreen referrerpolicy="no-referrer" allow="autoplay; fullscreen; encrypted-media"></iframe>
+      </div>
+    </section>
+
+    <div class="flex items-center gap-2 overflow-x-auto pb-1">
+      <button onclick="setCat('all')" id="cat-all" class="cat-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-500 text-slate-950 whitespace-nowrap">الكل</button>
+      <button onclick="setCat('beIN Sports')" id="cat-bein" class="cat-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 whitespace-nowrap">beIN Sports HD</button>
+      <button onclick="setCat('قنوات عربية')" id="cat-ar" class="cat-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 whitespace-nowrap">الرياضية و SSC</button>
+    </div>
+
+    <section id="channels-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3"></section>
+
+    <section class="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 text-xs text-slate-400 leading-relaxed space-y-2">
+      <h3 class="text-sm font-bold text-emerald-400">مشاهدة قنوات بي ان سبورت بث مباشر على كورة توداي</h3>
+      <p>يوفر موقع KORA TODAY خدمة البث المباشر لقنوات beIN Sports 1 HD وحتى beIN Sports 6 HD إضافة إلى قناة الإخبارية والرياضية المغربية و SSC على مدار الساعة لمتابعة الاستوديوهات التحليلية وأقوى مباريات الدوري الإنجليزي والإسباني ودوري أبطال أوروبا بدون تقطيع على الهاتف والحاسوب.</p>
+      <div class="flex flex-wrap gap-2 pt-1">
+        <a href="index.html" class="text-emerald-400 hover:underline">جدول مباريات اليوم</a> •
+        <a href="replays.html" class="text-emerald-400 hover:underline">إعادة وملخصات المباريات</a> •
+        <a href="bein-sports-1-live.html" class="text-emerald-400 hover:underline">beIN Sports 1 Live</a> •
+        <a href="bein-sports-2-live.html" class="text-emerald-400 hover:underline">beIN Sports 2 Live</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="border-t border-slate-800 py-4 text-center text-xs text-slate-500">
+    © 2026 KORA TODAY — جميع الحقوق محفوظة
+  </footer>
+
+  <script>
+    var sb = supabase.createClient('https://uwyljkxcfcqmteltjzxu.supabase.co', 'sb_publishable_5E_ajIPbGSP0Kx9a_LJJXQ_xiG4Jahx');
+    var allChannels = [];
+    var activeCat = 'all';
+    var activeSlug = null;
+    var hlsInstance = null;
+
+    function esc(s) {
+      return String(s || '').replace(/[&<>"']/g, function(m) {
+        return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];
+      });
+    }
+
+    function normalizeUrl(raw) {
+      var u = (raw || '').trim();
+      var m = u.match(/src=["']([^"']+)["']/i);
+      if (m) u = m[1];
+      var yt = u.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|live\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+      if (yt) return 'https://www.youtube.com/embed/' + yt[1] + '?autoplay=1&rel=0';
+      return u;
+    }
+
+    function playStream(rawUrl) {
+      var url = normalizeUrl(rawUrl);
+      var video = document.getElementById('hls-video');
+      var iframe = document.getElementById('embed-iframe');
+      var ph = document.getElementById('player-placeholder');
+      var msg = document.getElementById('placeholder-msg');
+
+      if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null; }
+      video.pause();
+      video.removeAttribute('src');
+      video.classList.add('hidden');
+      iframe.src = 'about:blank';
+      iframe.classList.add('hidden');
+
+      if (!url) {
+        ph.classList.remove('hidden');
+        msg.textContent = 'رابط البث لهذه القناة سيتم تحديثه قبل انطلاق المباريات بقليل.';
+        return;
+      }
+
+      ph.classList.add('hidden');
+      if (url.indexOf('.m3u8') !== -1) {
+        video.classList.remove('hidden');
+        if (window.Hls && Hls.isSupported()) {
+          hlsInstance = new Hls();
+          hlsInstance.loadSource(url);
+          hlsInstance.attachMedia(video);
+          hlsInstance.on(Hls.Events.MANIFEST_PARSED, function() { video.play().catch(function(){}); });
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+          video.src = url;
+          video.play().catch(function(){});
+        }
+      } else {
+        iframe.src = url;
+        iframe.classList.remove('hidden');
+      }
+    }
+
+    function selectChannel(slug, scroll) {
+      var ch = allChannels.find(function(c) { return c.slug === slug; });
+      if (!ch) return;
+      activeSlug = ch.slug;
+      document.getElementById('active-ch-title').textContent = ch.name + ' — بث مباشر';
+
+      var btns = document.getElementById('server-btns');
+      var html = '';
+      if (ch.stream_url) {
+        html += '<button onclick="switchSrv(this, \'' + esc(ch.stream_url) + '\')" class="srv-btn px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-500 text-slate-950">السيرفر 1</button>';
+      }
+      if (ch.backup_url) {
+        html += '<button onclick="switchSrv(this, \'' + esc(ch.backup_url) + '\')" class="srv-btn px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700">السيرفر 2</button>';
+      }
+      btns.innerHTML = html;
+
+      playStream(ch.stream_url || ch.backup_url || '');
+      renderChannels();
+
+      if (window.history && window.history.replaceState) {
+        window.history.replaceState(null, '', '?ch=' + encodeURIComponent(ch.slug));
+      }
+      if (scroll) {
+        document.getElementById('player-box').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    window.switchSrv = function(btn, url) {
+      document.querySelectorAll('.srv-btn').forEach(function(b) {
+        b.className = 'srv-btn px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700';
+      });
+      btn.className = 'srv-btn px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-500 text-slate-950';
+      playStream(url);
+    };
+
+    window.setCat = function(cat) {
+      activeCat = cat;
+      document.querySelectorAll('.cat-btn').forEach(function(b) {
+        b.className = 'cat-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 whitespace-nowrap';
+      });
+      var map = { 'all': 'cat-all', 'beIN Sports': 'cat-bein', 'قنوات عربية': 'cat-ar' };
+      var activeBtn = document.getElementById(map[cat]);
+      if (activeBtn) activeBtn.className = 'cat-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-500 text-slate-950 whitespace-nowrap';
+      renderChannels();
+    };
+
+    function renderChannels() {
+      var grid = document.getElementById('channels-grid');
+      var list = activeCat === 'all' ? allChannels : allChannels.filter(function(c) { return c.category === activeCat; });
+      if (!list.length) {
+        grid.innerHTML = '<div class="col-span-full text-center py-8 text-slate-500 text-sm">لا توجد قنوات في هذا التصنيف حالياً.</div>';
+        return;
+      }
+      grid.innerHTML = list.map(function(c) {
+        var hasLink = !!(c.stream_url || c.backup_url);
+        var isSel = c.slug === activeSlug;
+        var border = isSel ? 'border-emerald-500 bg-emerald-500/10' : 'border-slate-800 bg-slate-900 hover:border-slate-700';
+        var badge = hasLink
+          ? '<span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-400"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>شغّال</span>'
+          : '<span class="text-[11px] text-slate-500">قريباً</span>';
+        return '<button onclick="selectChannel(\'' + esc(c.slug) + '\', true)" class="text-right p-4 rounded-2xl border ' + border + ' transition flex items-center justify-between gap-3">' +
+          '<div><div class="font-bold text-sm text-white">' + esc(c.name) + '</div>' +
+          '<div class="text-[11px] text-slate-400 mt-0.5">' + esc(c.category || 'HD') + '</div></div>' +
+          '<div class="flex flex-col items-end gap-1">' + badge +
+          '<span class="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300">HD</span></div></button>';
+      }).join('');
+    }
+
+    async function init() {
+      var res = await sb.from('channels').select('*').eq('is_active', true).order('sort_order', { ascending: true });
+      allChannels = res.data || [];
+      document.getElementById('ch-count').textContent = allChannels.length + ' قناة';
+      renderChannels();
+
+      var params = new URLSearchParams(window.location.search);
+      var reqSlug = params.get('ch');
+      var firstLive = allChannels.find(function(c) { return c.stream_url || c.backup_url; });
+      if (reqSlug && allChannels.some(function(c) { return c.slug === reqSlug; })) {
+        selectChannel(reqSlug, false);
+      } else if (firstLive) {
+        selectChannel(firstLive.slug, false);
+      } else {
+        document.getElementById('placeholder-msg').textContent = 'اختر قناة للمشاهدة (يتم تحديث الروابط من لوحة التحكم).';
+      }
+    }
+
+    window.selectChannel = selectChannel;
+    init();
+  </script>
+</body>
+</html>

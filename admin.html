@@ -11,6 +11,21 @@
   <link rel="apple-touch-icon" href="favicon.png?v=2">
 </head>
 <body class="bg-slate-950 text-white min-h-screen font-sans p-4">
+
+<div id="kt-admin-tabs" dir="rtl" class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50 px-4 py-3 mb-4">
+  <div class="max-w-4xl mx-auto flex flex-wrap items-center justify-between gap-2">
+    <div class="flex items-center gap-2 overflow-x-auto">
+      <button onclick="ktSwitchTab('matches')" id="kt-tab-matches" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-500 text-slate-950 whitespace-nowrap">⚽ المباريات</button>
+      <button onclick="ktSwitchTab('channels')" id="kt-tab-channels" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-200 hover:bg-slate-700 whitespace-nowrap">📺 قنوات beIN HD</button>
+      <button onclick="ktSwitchTab('replays')" id="kt-tab-replays" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-200 hover:bg-slate-700 whitespace-nowrap">🎬 إعادة وملخصات</button>
+    </div>
+    <div class="flex items-center gap-2 text-xs">
+      <a href="bein-sports-hd.html" target="_blank" class="px-2.5 py-1.5 rounded-lg bg-slate-800 text-emerald-400 hover:bg-slate-700">صفحة القنوات ↗</a>
+      <a href="replays.html" target="_blank" class="px-2.5 py-1.5 rounded-lg bg-slate-800 text-amber-400 hover:bg-slate-700">صفحة الإعادة ↗</a>
+    </div>
+  </div>
+</div>
+
   <div class="max-w-3xl mx-auto space-y-6">
     <!-- Login Box -->
     <section id="login-box" class="max-w-sm mx-auto mt-20 bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
@@ -151,5 +166,210 @@
 
     checkAuth();
   </script>
+
+<section id="kt-channels-panel" dir="rtl" class="hidden max-w-4xl mx-auto px-4 pb-12 space-y-5 text-slate-100">
+  <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+    <h2 class="font-bold text-emerald-400 text-sm">➕ إضافة قناة جديدة (تنظيف تلقائي لكود iframe)</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+      <input id="kt-ch-name" placeholder="اسم القناة (مثال: beIN Sports 7 HD)" class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white" />
+      <select id="kt-ch-cat" class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+        <option value="beIN Sports">beIN Sports</option>
+        <option value="قنوات عربية">قنوات عربية</option>
+      </select>
+      <input id="kt-ch-url1" placeholder="رابط السيرفر 1 (أو الصق كود iframe كامل)" class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white" />
+      <input id="kt-ch-url2" placeholder="رابط السيرفر 2 الاحتياطي (اختياري)" class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white" />
+    </div>
+    <button onclick="ktAddChannel()" class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs">إضافة القناة</button>
+  </div>
+  <div id="kt-channels-list" class="space-y-3"></div>
+</section>
+
+<section id="kt-replays-panel" dir="rtl" class="hidden max-w-4xl mx-auto px-4 pb-12 space-y-5 text-slate-100">
+  <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+    <h2 class="font-bold text-amber-400 text-sm">➕ إضافة إعادة مباراة أو ملخص أهداف</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+      <input id="kt-rp-title" placeholder="المباراة (مثال: ريال مدريد vs برشلونة)" class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white" />
+      <input id="kt-rp-league" placeholder="البطولة (مثال: الدوري الإسباني)" class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white" />
+      <input id="kt-rp-score" placeholder="النتيجة (مثال: 2 - 1) اختياري" class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white" />
+      <div class="flex gap-2">
+        <select id="kt-rp-type" class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+          <option value="replay">إعادة كاملة (Full Match)</option>
+          <option value="highlight">ملخص وأهداف (Highlights)</option>
+        </select>
+        <input id="kt-rp-date" type="date" class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white" />
+      </div>
+      <input id="kt-rp-url" placeholder="رابط YouTube أو DaddyLive أو الصق كود iframe كامل" class="sm:col-span-2 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white" />
+    </div>
+    <button onclick="ktAddReplay()" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs">نشر الفيديو</button>
+  </div>
+  <div id="kt-replays-list" class="space-y-3"></div>
+</section>
+
+<script>
+(function() {
+  var ktSb = (typeof sb !== 'undefined' && sb) ? sb : supabase.createClient('https://uwyljkxcfcqmteltjzxu.supabase.co', 'sb_publishable_5E_ajIPbGSP0Kx9a_LJJXQ_xiG4Jahx');
+  var ktMatchEls = [];
+  var dateEl = document.getElementById('kt-rp-date');
+  if (dateEl) dateEl.value = new Date().toISOString().slice(0, 10);
+
+  function ktCleanUrl(raw) {
+    var s = (raw || '').trim();
+    var m = s.match(/src=["']([^"']+)["']/i);
+    return m ? m[1].trim() : s;
+  }
+
+  function ktEsc(s) {
+    return String(s || '').replace(/[&<>"']/g, function(m) {
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];
+    });
+  }
+
+  // Auto-clean pasted <iframe> in ALL inputs across admin.html (Matches + Channels + Replays)
+  document.addEventListener('paste', function(e) {
+    var el = e.target;
+    if (!el || el.tagName !== 'INPUT') return;
+    var text = (e.clipboardData || window.clipboardData).getData('text') || '';
+    if (text.indexOf('<iframe') !== -1) {
+      var cleaned = ktCleanUrl(text);
+      if (cleaned) {
+        e.preventDefault();
+        el.value = cleaned;
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    }
+  });
+
+  function captureMatchEls() {
+    if (ktMatchEls.length) return;
+    Array.from(document.body.children).forEach(function(el) {
+      if (el.tagName === 'SCRIPT' || el.tagName === 'STYLE') return;
+      if (['kt-admin-tabs', 'kt-channels-panel', 'kt-replays-panel'].indexOf(el.id) !== -1) return;
+      el.dataset.ktOrigDisplay = el.style.display || '';
+      ktMatchEls.push(el);
+    });
+  }
+
+  window.ktSwitchTab = function(tab) {
+    captureMatchEls();
+    var chP = document.getElementById('kt-channels-panel');
+    var rpP = document.getElementById('kt-replays-panel');
+    ['matches', 'channels', 'replays'].forEach(function(t) {
+      var b = document.getElementById('kt-tab-' + t);
+      if (b) b.className = (t === tab)
+        ? 'px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-500 text-slate-950 whitespace-nowrap'
+        : 'px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-200 hover:bg-slate-700 whitespace-nowrap';
+    });
+    ktMatchEls.forEach(function(el) { el.style.display = (tab === 'matches') ? el.dataset.ktOrigDisplay : 'none'; });
+    chP.classList.toggle('hidden', tab !== 'channels');
+    rpP.classList.toggle('hidden', tab !== 'replays');
+    if (tab === 'channels') ktLoadChannels();
+    if (tab === 'replays') ktLoadReplays();
+  };
+
+  async function ktLoadChannels() {
+    var box = document.getElementById('kt-channels-list');
+    box.innerHTML = '<div class="text-xs text-slate-400">جاري التحميل...</div>';
+    var res = await ktSb.from('channels').select('*').order('sort_order', { ascending: true }).order('id', { ascending: true });
+    if (res.error) { box.innerHTML = '<div class="text-xs text-red-400">خطأ: ' + ktEsc(res.error.message) + '</div>'; return; }
+    var rows = res.data || [];
+    box.innerHTML = rows.map(function(c) {
+      return '<div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-2.5">' +
+        '<div class="flex items-center justify-between gap-2">' +
+          '<div class="font-bold text-sm text-white">' + ktEsc(c.name) + ' <span class="text-[11px] font-normal text-slate-400">(' + ktEsc(c.category) + ')</span></div>' +
+          '<div class="flex items-center gap-2">' +
+            '<label class="text-xs text-slate-300 flex items-center gap-1 cursor-pointer"><input type="checkbox" id="ch-act-' + c.id + '" ' + (c.is_active ? 'checked' : '') + ' /> مفعّلة</label>' +
+            '<button onclick="ktDelChannel(' + c.id + ')" class="text-xs px-2.5 py-1 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30">حذف</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">' +
+          '<input id="ch-u1-' + c.id + '" value="' + ktEsc(c.stream_url || '') + '" placeholder="السيرفر 1 (الصق رابط أو iframe)" class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white" />' +
+          '<input id="ch-u2-' + c.id + '" value="' + ktEsc(c.backup_url || '') + '" placeholder="السيرفر 2 الاحتياطي" class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white" />' +
+        '</div>' +
+        '<button onclick="ktSaveChannel(' + c.id + ', this)" class="px-4 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs">حفظ الروابط</button>' +
+      '</div>';
+    }).join('');
+  }
+
+  window.ktSaveChannel = async function(id, btn) {
+    var u1 = ktCleanUrl(document.getElementById('ch-u1-' + id).value);
+    var u2 = ktCleanUrl(document.getElementById('ch-u2-' + id).value);
+    var act = document.getElementById('ch-act-' + id).checked;
+    document.getElementById('ch-u1-' + id).value = u1;
+    document.getElementById('ch-u2-' + id).value = u2;
+    btn.textContent = 'جاري الحفظ...';
+    var res = await ktSb.from('channels').update({ stream_url: u1, backup_url: u2, is_active: act }).eq('id', id);
+    btn.textContent = res.error ? '❌ خطأ' : '✅ تم الحفظ';
+    setTimeout(function() { btn.textContent = 'حفظ الروابط'; }, 1500);
+  };
+
+  window.ktAddChannel = async function() {
+    var name = document.getElementById('kt-ch-name').value.trim();
+    if (!name) return alert('اكتب اسم القناة');
+    var slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '-' + Date.now().toString().slice(-4);
+    var res = await ktSb.from('channels').insert({
+      name: name,
+      slug: slug,
+      category: document.getElementById('kt-ch-cat').value,
+      stream_url: ktCleanUrl(document.getElementById('kt-ch-url1').value),
+      backup_url: ktCleanUrl(document.getElementById('kt-ch-url2').value),
+      is_active: true,
+      sort_order: 50
+    });
+    if (res.error) return alert('خطأ: ' + res.error.message);
+    document.getElementById('kt-ch-name').value = '';
+    document.getElementById('kt-ch-url1').value = '';
+    document.getElementById('kt-ch-url2').value = '';
+    ktLoadChannels();
+  };
+
+  window.ktDelChannel = async function(id) {
+    if (!confirm('حذف هاد القناة؟')) return;
+    await ktSb.from('channels').delete().eq('id', id);
+    ktLoadChannels();
+  };
+
+  async function ktLoadReplays() {
+    var box = document.getElementById('kt-replays-list');
+    box.innerHTML = '<div class="text-xs text-slate-400">جاري التحميل...</div>';
+    var res = await ktSb.from('replays').select('*').order('created_at', { ascending: false });
+    if (res.error) { box.innerHTML = '<div class="text-xs text-red-400">خطأ: ' + ktEsc(res.error.message) + '</div>'; return; }
+    var rows = res.data || [];
+    if (!rows.length) { box.innerHTML = '<div class="text-xs text-slate-400">ما كاين حتى فيديو دابا.</div>'; return; }
+    box.innerHTML = rows.map(function(r) {
+      return '<div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-2">' +
+        '<div><div class="font-bold text-sm text-white">' + ktEsc(r.title) + (r.score ? ' (' + ktEsc(r.score) + ')' : '') + '</div>' +
+        '<div class="text-xs text-slate-400">' + ktEsc(r.league) + ' • ' + ktEsc(r.match_date) + ' • ' + (r.type === 'highlight' ? 'ملخص' : 'إعادة كاملة') + '</div></div>' +
+        '<button onclick="ktDelReplay(' + r.id + ')" class="text-xs px-3 py-1.5 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 font-bold">حذف</button>' +
+      '</div>';
+    }).join('');
+  }
+
+  window.ktAddReplay = async function() {
+    var title = document.getElementById('kt-rp-title').value.trim();
+    var url = ktCleanUrl(document.getElementById('kt-rp-url').value);
+    if (!title || !url) return alert('عمر عنوان المباراة والرابط');
+    var res = await ktSb.from('replays').insert({
+      title: title,
+      league: document.getElementById('kt-rp-league').value.trim() || 'إعادة مباراة',
+      score: document.getElementById('kt-rp-score').value.trim(),
+      type: document.getElementById('kt-rp-type').value,
+      match_date: document.getElementById('kt-rp-date').value || new Date().toISOString().slice(0, 10),
+      video_url: url
+    });
+    if (res.error) return alert('خطأ: ' + res.error.message);
+    document.getElementById('kt-rp-title').value = '';
+    document.getElementById('kt-rp-score').value = '';
+    document.getElementById('kt-rp-url').value = '';
+    ktLoadReplays();
+  };
+
+  window.ktDelReplay = async function(id) {
+    if (!confirm('حذف هاد الفيديو؟')) return;
+    await ktSb.from('replays').delete().eq('id', id);
+    ktLoadReplays();
+  };
+})();
+</script>
+
 </body>
 </html>
