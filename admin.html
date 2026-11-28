@@ -7,21 +7,6 @@
   <title>Admin - KORA STREAM</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<!-- KT-SB-HOOK-START -->
-<script>
-(function() {
-  if (window.supabase && typeof window.supabase.createClient === 'function' && !window.supabase.__ktHooked) {
-    var origCreate = window.supabase.createClient.bind(window.supabase);
-    window.supabase.createClient = function() {
-      var client = origCreate.apply(null, arguments);
-      window.__ktAdminSb = client;
-      return client;
-    };
-    window.supabase.__ktHooked = true;
-  }
-})();
-</script>
-<!-- KT-SB-HOOK-END -->
 <link rel="icon" type="image/png" href="favicon.png?v=2">
   <link rel="apple-touch-icon" href="favicon.png?v=2">
 </head>
@@ -43,7 +28,7 @@
     <section id="dashboard" class="hidden space-y-5">
       <header class="flex items-center justify-between bg-slate-900 border border-slate-800 p-4 rounded-2xl">
         <h1 class="font-black text-emerald-400">إدارة روابط البث</h1>
-        <button onclick="logout()" class="text-xs bg-red-500/20 text-red-400 px-3 py-1.5 rounded-lg">خروج</button>
+        <div class="flex items-center gap-2"><button onclick="logout()" class="text-xs bg-red-500/20 text-red-400 px-3 py-1.5 rounded-lg">خروج</button><button type="button" id="kt-refresh-btn" onclick="ktRefreshAdmin()" class="px-3 py-1.5 rounded-lg bg-sky-500/15 hover:bg-sky-500/30 border border-sky-500/40 text-sky-400 text-xs font-bold transition cursor-pointer">🔄 تحديث</button></div>
       </header>
 
       <div id="matches-container" class="space-y-4"></div>
@@ -112,7 +97,7 @@
           <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
             <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
               <div class="font-bold text-sm">${m.home_team} <span class="text-emerald-400">vs</span> ${m.away_team}</div>
-              <span class="text-xs text-slate-400">${m.league_name} • ${timeStr}</span>
+              <div class="flex items-center gap-2"><span class="text-xs text-slate-400">${m.league_name} • ${timeStr}</span><button type="button" onclick="ktDeleteMatch('${m.id}', this)" class="px-2.5 py-1 rounded-lg bg-red-500/15 hover:bg-red-500/30 border border-red-500/40 text-red-400 text-xs font-bold transition cursor-pointer whitespace-nowrap">🗑️ حذف</button></div>
             </div>
 
             <div class="space-y-1.5">
@@ -169,7 +154,44 @@
 
     checkAuth();
   
-if (typeof checkAuth === 'function') window.__ktNativeReload = checkAuth;
+  /* KT-INLINE-DEL-START */
+  window.ktRefreshAdmin = async function() {
+    var rb = document.getElementById('kt-refresh-btn');
+    if (rb) { rb.disabled = true; rb.textContent = '⏳ جاري التحديث...'; }
+    try {
+      if (typeof loadMatches === 'function') { await loadMatches(); } else { window.location.reload(); return; }
+      
+    } finally {
+      if (rb) { rb.disabled = false; rb.textContent = '🔄 تحديث'; }
+    }
+  };
+
+  window.ktDeleteMatch = async function(id, btn) {
+    if (!id) return;
+    if (!confirm('واش متأكد بغيتي تمسح هاد المباراة نهائياً؟')) return;
+    if (btn) { btn.disabled = true; btn.textContent = '⏳...'; }
+    try {
+      try { await sb.from('streams').delete().eq('match_id', id); } catch (e) {}
+      var res = await sb.from('matches').delete().eq('id', id).select();
+      if (res.error) {
+        alert('❌ فشل الحذف: ' + res.error.message);
+        if (btn) { btn.disabled = false; btn.textContent = '🗑️ حذف'; }
+        return;
+      }
+      if (!res.data || !res.data.length) {
+        alert('⚠️ لم يتم الحذف — تأكد أنك دوزتي كود SQL ديال الصلاحية فـ Supabase.');
+        if (btn) { btn.disabled = false; btn.textContent = '🗑️ حذف'; }
+        return;
+      }
+      await window.ktRefreshAdmin();
+    } catch (err) {
+      alert('❌ خطأ: ' + err.message);
+      if (btn) { btn.disabled = false; btn.textContent = '🗑️ حذف'; }
+    }
+  };
+  
+  /* KT-INLINE-DEL-END */
+
 </script>
 
 
@@ -195,477 +217,5 @@ document.addEventListener('paste', function(e) {
 
 
 
-<!-- KT-DELETE-MANAGER-START -->
-<script>
-(function() {
-  var sb = window.__ktAdminSb || (window.supabase && window.supabase.createClient('https://uwyljkxcfcqmteltjzxu.supabase.co', 'sb_publishable_5E_ajIPbGSP0Kx9a_LJJXQ_xiG4Jahx'));
-  if (!sb) return;
-
-  var STREAM_TABLE = 'streams';
-  var rows = [];
-  var selectedIds = new Set();
-  var drawerOpen = false;
-  var isBusy = false;
-
-  function esc(s) {
-    return String(s || '').replace(/[&<>"']/g, function(m) {
-      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];
-    });
-  }
-
-  function getSpacedText(el) {
-    var out = [];
-    var w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
-    var n;
-    while ((n = w.nextNode())) {
-      var v = (n.nodeValue || '').trim();
-      if (v) out.push(v);
-    }
-    return out.join(' ');
-  }
-
-  function norm(s) {
-    return String(s || '').toLowerCase().replace(/[^a-z0-9\u0600-\u06FF]+/g, ' ').trim();
-  }
-
-  function getTitle(m) {
-    var h = m.home_team || m.home_name || m.team1 || m.team_a || m.home || '';
-    var a = m.away_team || m.away_name || m.team2 || m.team_b || m.away || '';
-    if (h && a) return h + ' vs ' + a;
-    return m.title || m.name || m.match_name || ('مباراة #' + m.id);
-  }
-
-  function getMeta(m) {
-    return [m.league || m.competition || '', m.match_time || m.time || m.kickoff || '', m.match_date || m.date || ''].filter(Boolean).join(' • ');
-  }
-
-  function findLogoutBtn() {
-    var btns = document.querySelectorAll('button');
-    for (var i = 0; i < btns.length; i++) {
-      var t = (btns[i].textContent || '').trim();
-      if ((t === 'خروج' || t.indexOf('تسجيل الخروج') !== -1) && btns[i].offsetParent !== null) {
-        return btns[i];
-      }
-    }
-    return null;
-  }
-
-  function showToast(text, isErr) {
-    var el = document.getElementById('kt-del-toast');
-    if (!el) {
-      el = document.createElement('div');
-      el.id = 'kt-del-toast';
-      el.dir = 'rtl';
-      el.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:99999;padding:10px 18px;border-radius:12px;font-size:13px;font-weight:800;box-shadow:0 10px 30px rgba(0,0,0,0.5);';
-      document.body.appendChild(el);
-    }
-    el.style.background = isErr ? '#7f1d1d' : '#065f46';
-    el.style.border = isErr ? '1px solid #ef4444' : '1px solid #10b981';
-    el.style.color = '#fff';
-    el.textContent = text;
-    el.style.display = 'block';
-    clearTimeout(el._t);
-    el._t = setTimeout(function() { el.style.display = 'none'; }, 3500);
-  }
-
-  async function loadAllMatches() {
-    var res = await sb.from('matches').select('*').order('id', { ascending: false });
-    if (!res.error && Array.isArray(res.data)) {
-      rows = res.data;
-      selectedIds.clear();
-    }
-  }
-
-  async function refreshMatchCards(manualClick) {
-    var refBtn = document.getElementById('kt-refresh-cards');
-    if (refBtn) {
-      refBtn.disabled = true;
-      refBtn.textContent = '⏳ جاري التحديث...';
-    }
-    try {
-      await loadAllMatches();
-      if (typeof window.__ktNativeReload === 'function') {
-        await window.__ktNativeReload();
-        setTimeout(function() {
-          injectCardDeleteButtons();
-          if (drawerOpen) renderDrawerList();
-        }, 250);
-        if (manualClick) showToast('✅ تم تحديث قائمة المباريات (' + rows.length + ')', false);
-      } else if (manualClick) {
-        window.location.reload();
-        return;
-      } else {
-        injectCardDeleteButtons();
-        if (drawerOpen) renderDrawerList();
-      }
-    } catch (e) {
-      if (manualClick) window.location.reload();
-    } finally {
-      if (refBtn) {
-        refBtn.disabled = false;
-        refBtn.textContent = '🔄 تحديث المباريات';
-      }
-    }
-  }
-
-  function findMatchCards() {
-    var addBtns = [];
-    var btns = document.querySelectorAll('button');
-    for (var i = 0; i < btns.length; i++) {
-      var b = btns[i];
-      if (b.offsetParent === null) continue;
-      if (b.closest('#kt-bulk-drawer')) continue;
-      var t = (b.textContent || '').trim();
-      if (t.indexOf('إضافة') !== -1) addBtns.push(b);
-    }
-    if (!addBtns.length) return [];
-
-    // Lowest common ancestor of all "إضافة" buttons = exact match cards list container
-    if (addBtns.length >= 2) {
-      var ancestors = [];
-      var cur = addBtns[0].parentElement;
-      while (cur && cur !== document.body) {
-        ancestors.push(cur);
-        cur = cur.parentElement;
-      }
-      var lca = null;
-      for (var a = 0; a < ancestors.length; a++) {
-        var cand = ancestors[a];
-        var ok = true;
-        for (var k = 1; k < addBtns.length; k++) {
-          if (!cand.contains(addBtns[k])) { ok = false; break; }
-        }
-        if (ok) { lca = cand; break; }
-      }
-      if (lca) {
-        var cards = [];
-        for (var c = 0; c < lca.children.length; c++) {
-          var child = lca.children[c];
-          if (child.id === 'kt-bulk-drawer') continue;
-          for (var m = 0; m < addBtns.length; m++) {
-            if (child.contains(addBtns[m])) { cards.push(child); break; }
-          }
-        }
-        if (cards.length) return cards;
-      }
-    }
-
-    // Fallback if only 1 card is rendered
-    var single = addBtns[0].parentElement;
-    while (single && single !== document.body) {
-      if (/\bvs\b/i.test(getSpacedText(single))) break;
-      single = single.parentElement;
-    }
-    return (single && single !== document.body) ? [single] : [];
-  }
-
-  function matchCardToRow(card) {
-    // 1. Direct ID match from attributes/onclick
-    var els = card.querySelectorAll('[data-id],[data-match-id],[onclick],[id]');
-    for (var i = 0; i < els.length; i++) {
-      var el = els[i];
-      var attrs = [
-        el.getAttribute('data-match-id'),
-        el.getAttribute('data-id'),
-        el.getAttribute('onclick') || '',
-        el.id || ''
-      ];
-      for (var k = 0; k < attrs.length; k++) {
-        var val = attrs[k];
-        if (!val) continue;
-        var tokens = val.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|\b\d+\b/gi) || [val];
-        for (var t = 0; t < tokens.length; t++) {
-          var found = rows.find(function(r) { return String(r.id) === String(tokens[t]); });
-          if (found) return found;
-        }
-      }
-    }
-
-    // 2. Smart text match using spaced text (works even when <span>TeamA</span><span>vs</span><span>TeamB</span> has no spaces)
-    var spaced = norm(getSpacedText(card));
-    var best = null;
-    var bestScore = 0;
-    for (var j = 0; j < rows.length; j++) {
-      var r = rows[j];
-      var h = norm(r.home_team || r.home_name || r.team1 || r.team_a || r.home || '');
-      var a = norm(r.away_team || r.away_name || r.team2 || r.team_b || r.away || '');
-      if (h && a && spaced.indexOf(h) !== -1 && spaced.indexOf(a) !== -1) {
-        var sc = h.length + a.length;
-        var lg = norm(r.league || r.competition || '');
-        if (lg && spaced.indexOf(lg) !== -1) sc += 20;
-        var tm = String(r.match_time || r.time || r.kickoff || '');
-        var hhmm = tm.match(/\d{2}:\d{2}/);
-        if (hhmm && spaced.indexOf(norm(hhmm[0])) !== -1) sc += 30;
-        if (sc > bestScore) { bestScore = sc; best = r; }
-      }
-    }
-    if (best) return best;
-
-    // 3. Fallback by title
-    for (var x = 0; x < rows.length; x++) {
-      var ti = norm(rows[x].title || rows[x].name || rows[x].match_name || '');
-      if (ti && spaced.indexOf(ti) !== -1) return rows[x];
-    }
-    return null;
-  }
-
-  async function deleteMatchIds(ids, cardEl) {
-    if (!ids || !ids.length) return;
-    var ok = confirm('واش متأكد بغيتي تمسح ' + (ids.length === 1 ? 'هاد المباراة نهائياً؟' : ids.length + ' مباريات نهائياً؟'));
-    if (!ok) return;
-
-    try { await sb.from(STREAM_TABLE).delete().in('match_id', ids); } catch (e) {}
-
-    var res = await sb.from('matches').delete().in('id', ids).select();
-    if (res.error) {
-      showToast('❌ فشل الحذف: ' + res.error.message, true);
-      return;
-    }
-    if (!res.data || !res.data.length) {
-      showToast('⚠️ لم يتم الحذف — تأكد من صلاحية DELETE فـ Supabase.', true);
-      return;
-    }
-
-    // Remove deleted cards immediately from the UI
-    if (cardEl && cardEl.parentElement) {
-      cardEl.remove();
-    } else {
-      var deletedSet = new Set(ids.map(String));
-      findMatchCards().forEach(function(c) {
-        if (c.dataset.ktMatchId && deletedSet.has(String(c.dataset.ktMatchId))) {
-          c.remove();
-        }
-      });
-    }
-
-    showToast('✅ تم حذف ' + res.data.length + ' مباراة بنجاح!', false);
-    await refreshMatchCards(false);
-  }
-
-  function injectTopControls(logoutBtn) {
-    if (document.getElementById('kt-admin-actions')) return;
-    var headerBar = logoutBtn.closest('div');
-    if (!headerBar) return;
-
-    // Group Refresh + Bulk Delete + Logout neatly together
-    var group = document.createElement('div');
-    group.id = 'kt-admin-actions';
-    group.style.cssText = 'display:flex;flex-wrap:wrap;align-items:center;gap:8px;';
-
-    var refBtn = document.createElement('button');
-    refBtn.id = 'kt-refresh-cards';
-    refBtn.type = 'button';
-    refBtn.textContent = '🔄 تحديث المباريات';
-    refBtn.style.cssText = 'padding:6px 12px;border-radius:8px;border:1px solid rgba(56,189,248,0.45);background:rgba(14,165,233,0.16);color:#7dd3fc;font-size:12px;font-weight:800;cursor:pointer;';
-    refBtn.onclick = function() { refreshMatchCards(true); };
-
-    var bulkBtn = document.createElement('button');
-    bulkBtn.id = 'kt-bulk-toggle';
-    bulkBtn.type = 'button';
-    bulkBtn.textContent = '🗑️ حذف جماعي';
-    bulkBtn.style.cssText = 'padding:6px 12px;border-radius:8px;border:1px solid rgba(239,68,68,0.5);background:rgba(239,68,68,0.18);color:#fca5a5;font-size:12px;font-weight:800;cursor:pointer;';
-    bulkBtn.onclick = async function() {
-      drawerOpen = !drawerOpen;
-      var drawer = ensureDrawer(headerBar);
-      drawer.style.display = drawerOpen ? 'block' : 'none';
-      if (drawerOpen) {
-        await loadAllMatches();
-        renderDrawerList();
-      }
-    };
-
-    logoutBtn.parentElement.insertBefore(group, logoutBtn);
-    group.appendChild(logoutBtn);
-    group.appendChild(refBtn);
-    group.appendChild(bulkBtn);
-  }
-
-  function ensureDrawer(headerBar) {
-    var drawer = document.getElementById('kt-bulk-drawer');
-    if (drawer) return drawer;
-
-    drawer = document.createElement('section');
-    drawer.id = 'kt-bulk-drawer';
-    drawer.dir = 'rtl';
-    drawer.style.cssText = 'display:none;max-width:960px;margin:14px auto;padding:16px;background:#0f172a;border:1px solid rgba(239,68,68,0.4);border-radius:16px;color:#f1f5f9;';
-    drawer.innerHTML =
-      '<div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;">' +
-        '<div><strong style="font-size:15px;color:#f87171;">🗑️ حذف جماعي وبحث في كل المباريات</strong> <span id="kt-dr-count" style="font-size:12px;color:#94a3b8;margin-right:6px;"></span></div>' +
-        '<div style="display:flex;flex-wrap:wrap;gap:6px;">' +
-          '<button type="button" id="kt-dr-all" style="padding:6px 10px;border-radius:8px;border:1px solid #334155;background:#1e293b;color:#38bdf8;font-size:12px;font-weight:700;cursor:pointer;">☑️ تحديد الكل</button>' +
-          '<button type="button" id="kt-dr-del" disabled style="padding:6px 12px;border-radius:8px;border:none;background:#dc2626;color:#fff;font-size:12px;font-weight:900;cursor:pointer;opacity:0.5;">🗑️ حذف المحدد (0)</button>' +
-          '<button type="button" id="kt-dr-close" style="padding:6px 10px;border-radius:8px;border:1px solid #334155;background:#1e293b;color:#cbd5e1;font-size:12px;font-weight:700;cursor:pointer;">إغلاق ✕</button>' +
-        '</div>' +
-      '</div>' +
-      '<input id="kt-dr-search" type="search" placeholder="ابحث باسم الفريق أو الدوري أو التاريخ..." style="width:100%;box-sizing:border-box;padding:9px 12px;margin-bottom:10px;border-radius:10px;border:1px solid #334155;background:#020617;color:#fff;font-size:13px;outline:none;" />' +
-      '<div id="kt-dr-list" style="display:flex;flex-direction:column;gap:7px;max-height:380px;overflow-y:auto;"></div>';
-
-    headerBar.insertAdjacentElement('afterend', drawer);
-
-    drawer.querySelector('#kt-dr-search').oninput = renderDrawerList;
-    drawer.querySelector('#kt-dr-close').onclick = function() {
-      drawerOpen = false;
-      drawer.style.display = 'none';
-    };
-    drawer.querySelector('#kt-dr-all').onclick = function() {
-      var list = getFilteredRows();
-      var allSel = list.length > 0 && list.every(function(m) { return selectedIds.has(String(m.id)); });
-      list.forEach(function(m) {
-        if (allSel) selectedIds.delete(String(m.id));
-        else selectedIds.add(String(m.id));
-      });
-      renderDrawerList();
-    };
-    drawer.querySelector('#kt-dr-del').onclick = function() {
-      deleteMatchIds(Array.from(selectedIds), null);
-    };
-
-    return drawer;
-  }
-
-  function getFilteredRows() {
-    var inp = document.getElementById('kt-dr-search');
-    var q = inp ? (inp.value || '').trim().toLowerCase() : '';
-    if (!q) return rows;
-    return rows.filter(function(m) {
-      return (getTitle(m) + ' ' + getMeta(m)).toLowerCase().indexOf(q) !== -1;
-    });
-  }
-
-  function renderDrawerList() {
-    var listEl = document.getElementById('kt-dr-list');
-    var countEl = document.getElementById('kt-dr-count');
-    var delBtn = document.getElementById('kt-dr-del');
-    if (!listEl) return;
-
-    var list = getFilteredRows();
-    if (countEl) countEl.textContent = '(' + rows.length + ' مباراة)';
-    if (delBtn) {
-      delBtn.textContent = '🗑️ حذف المحدد (' + selectedIds.size + ')';
-      delBtn.disabled = selectedIds.size === 0;
-      delBtn.style.opacity = selectedIds.size === 0 ? '0.5' : '1';
-    }
-
-    if (!list.length) {
-      listEl.innerHTML = '<div style="text-align:center;padding:20px;color:#64748b;font-size:12px;">لا توجد مباريات مطابقة.</div>';
-      return;
-    }
-
-    listEl.innerHTML = list.map(function(m) {
-      var idStr = String(m.id);
-      var chk = selectedIds.has(idStr) ? 'checked' : '';
-      return '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 12px;background:#020617;border:1px solid #1e293b;border-radius:10px;">' +
-        '<label style="display:flex;align-items:center;gap:9px;flex:1;min-width:0;cursor:pointer;">' +
-          '<input type="checkbox" class="kt-dr-cb" data-id="' + esc(idStr) + '" ' + chk + ' style="width:16px;height:16px;accent-color:#ef4444;cursor:pointer;flex-shrink:0;" />' +
-          '<div style="min-width:0;">' +
-            '<div style="font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc(getTitle(m)) + '</div>' +
-            '<div style="font-size:11px;color:#94a3b8;">' + esc(getMeta(m) || ('ID: ' + idStr)) + '</div>' +
-          '</div>' +
-        '</label>' +
-        '<button type="button" class="kt-dr-one" data-id="' + esc(idStr) + '" style="padding:5px 11px;border-radius:8px;border:1px solid rgba(239,68,68,0.45);background:rgba(239,68,68,0.16);color:#f87171;font-size:11px;font-weight:800;cursor:pointer;flex-shrink:0;">حذف ✕</button>' +
-      '</div>';
-    }).join('');
-
-    listEl.querySelectorAll('.kt-dr-cb').forEach(function(cb) {
-      cb.onchange = function() {
-        var id = cb.getAttribute('data-id');
-        if (cb.checked) selectedIds.add(id);
-        else selectedIds.delete(id);
-        renderDrawerList();
-      };
-    });
-    listEl.querySelectorAll('.kt-dr-one').forEach(function(b) {
-      b.onclick = function() { deleteMatchIds([b.getAttribute('data-id')], null); };
-    });
-  }
-
-  function injectCardDeleteButtons() {
-    var cards = findMatchCards();
-    for (var i = 0; i < cards.length; i++) {
-      var card = cards[i];
-      if (card.querySelector('.kt-card-del-btn')) continue;
-
-      var row = matchCardToRow(card);
-      if (row) card.dataset.ktMatchId = String(row.id);
-
-      var delBtn = document.createElement('button');
-      delBtn.type = 'button';
-      delBtn.className = 'kt-card-del-btn';
-      delBtn.textContent = '🗑️ حذف المباراة';
-      delBtn.style.cssText = 'padding:4px 10px;border-radius:8px;border:1px solid rgba(239,68,68,0.5);background:rgba(239,68,68,0.16);color:#f87171;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;';
-
-      (function(targetCard) {
-        delBtn.onclick = async function(e) {
-          e.preventDefault();
-          e.stopPropagation();
-          var id = targetCard.dataset.ktMatchId;
-          if (!id) {
-            await loadAllMatches();
-            var r = matchCardToRow(targetCard);
-            if (r) id = String(r.id);
-          }
-          if (!id) {
-            showToast('⚠️ تعذر تحديد معرف هذه المباراة، استعمل زر "حذف جماعي" في الأعلى.', true);
-            return;
-          }
-          deleteMatchIds([id], targetCard);
-        };
-      })(card);
-
-      // Place neatly beside the league/time label on the card's top row
-      var topRow = card.firstElementChild;
-      if (topRow && topRow.children.length >= 2) {
-        var metaChild = topRow.children[topRow.children.length - 1];
-        var holder = document.createElement('div');
-        holder.style.cssText = 'display:flex;align-items:center;gap:8px;flex-wrap:wrap;';
-        topRow.insertBefore(holder, metaChild);
-        holder.appendChild(metaChild);
-        holder.appendChild(delBtn);
-      } else if (topRow) {
-        topRow.appendChild(delBtn);
-      } else {
-        card.prepend(delBtn);
-      }
-    }
-  }
-
-  async function syncUI() {
-    if (isBusy) return;
-    var logoutBtn = findLogoutBtn();
-    if (!logoutBtn) {
-      var oldDrawer = document.getElementById('kt-bulk-drawer');
-      if (oldDrawer) oldDrawer.style.display = 'none';
-      var oldGroup = document.getElementById('kt-admin-actions');
-      if (oldGroup) {
-        var lb = oldGroup.querySelector('button');
-        if (lb && oldGroup.parentElement) oldGroup.parentElement.insertBefore(lb, oldGroup);
-        oldGroup.remove();
-      }
-      drawerOpen = false;
-      return;
-    }
-
-    isBusy = true;
-    try {
-      injectTopControls(logoutBtn);
-      if (!rows.length) await loadAllMatches();
-      injectCardDeleteButtons();
-    } finally {
-      isBusy = false;
-    }
-  }
-
-  var timer = null;
-  var obs = new MutationObserver(function() {
-    if (isBusy) return;
-    clearTimeout(timer);
-    timer = setTimeout(syncUI, 220);
-  });
-  obs.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'style'] });
-
-  setTimeout(syncUI, 350);
-})();
-</script>
-<!-- KT-DELETE-MANAGER-END -->
 </body>
 </html>
