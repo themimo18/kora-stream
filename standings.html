@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>جداول ترتيب الدوريات والهدافين لايف 2026 | KORA TODAY</title>
+  <meta name="description" content="تابع جدول ترتيب الدوري الإنجليزي، الدوري الإسباني، دوري أبطال أوروبا، الدوري الإيطالي، السعودي، وترتيب الهدافين محدث مباشرة لحظة بلحظة على كورة توداي." />
+  <link rel="canonical" href="https://koratoday.xyz/standings.html" />
+  <link rel="icon" href="favicon.png" type="image/png" />
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-REBZQPV4BQ"></script>
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-REBZQPV4BQ');</script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script data-cfasync="false" src="https://capitalhospitals.org/1/81bc042dbb6306e6db561bfaf73fd14c"></script>
+  <script async="async" data-cfasync="false" src="https://czernik.org/21/e7ca79a9188232a1a0ad2aca769793dd"></script>
+  <script data-cfasync="false" src="https://czernik.org/14/0397d013c9111bdd099bca6620eb6f54"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans">
+<header class="sticky top-0 z-50 shadow-xl">
+  <!-- Top Bar (Logo + League Flags + Live Pill) -->
+  <div class="bg-slate-900/95 backdrop-blur border-b border-slate-800">
+    <div class="max-w-5xl mx-auto px-3 sm:px-4 py-2.5 flex items-center justify-between gap-2">
+      <a href="index.html" class="flex items-center gap-2 shrink-0">
+        <img src="favicon.png" alt="KORA TODAY" class="w-8 h-8 rounded-lg object-cover" />
+        <span class="text-lg sm:text-xl font-black tracking-tight text-emerald-400">KORA TODAY</span>
+      </a>
+      <div class="flex items-center gap-1.5 sm:gap-2 overflow-x-auto">
+        <button onclick="ktFilterLeague('all')" title="جميع الدوريات" class="kt-flag-btn w-7 h-7 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-sm border border-emerald-500/60 shrink-0" data-lg="all">🌍</button>
+        <button onclick="ktFilterLeague('eng.1')" title="الدوري الإنجليزي" class="kt-flag-btn w-7 h-7 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-sm border border-slate-700 shrink-0" data-lg="eng.1">🏴󠁧󠁢󠁥󠁮󠁧󠁿</button>
+        <button onclick="ktFilterLeague('esp.1')" title="الدوري الإسباني" class="kt-flag-btn w-7 h-7 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-sm border border-slate-700 shrink-0" data-lg="esp.1">🇪🇸</button>
+        <button onclick="ktFilterLeague('uefa.champions')" title="دوري أبطال أوروبا" class="kt-flag-btn w-7 h-7 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-sm border border-slate-700 shrink-0" data-lg="uefa.champions">🇪🇺</button>
+        <button onclick="ktFilterLeague('ksa.1')" title="الدوري السعودي" class="kt-flag-btn w-7 h-7 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-sm border border-slate-700 shrink-0" data-lg="ksa.1">🇸🇦</button>
+        <button onclick="ktFilterLeague('ita.1')" title="الدوري الإيطالي" class="kt-flag-btn w-7 h-7 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-sm border border-slate-700 shrink-0" data-lg="ita.1">🇮🇹</button>
+        <button onclick="ktToggleLiveOnly()" id="kt-live-pill" class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500/15 hover:bg-red-500/25 border border-red-500/40 text-red-400 text-xs font-black shrink-0 transition">
+          <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+          <span>مباشر</span>
+          <span id="kt-live-num" class="bg-red-500 text-white text-[10px] px-1.5 rounded-full hidden">0</span>
+        </button>
+        <span id="live-count" class="hidden sm:inline-block text-[11px] bg-slate-800 px-2.5 py-1 rounded-full text-slate-300 shrink-0">محدث لايف</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Navigation Bar -->
+  <nav class="bg-gradient-to-l from-sky-600 via-cyan-600 to-emerald-600">
+    <div class="max-w-5xl mx-auto px-3 sm:px-4 py-2 flex items-center justify-between gap-2 overflow-x-auto text-xs">
+      <div class="flex items-center gap-1 bg-black/20 p-1 rounded-full shrink-0">
+        <button onclick="ktSetDay(-1)" id="kt-day--1" class="kt-day-btn px-2.5 py-1 rounded-full text-white/90 hover:bg-white/15 font-bold whitespace-nowrap transition">أمس</button>
+        <button onclick="ktSetDay(0)" id="kt-day-0" class="kt-day-btn px-3 py-1 rounded-full bg-white text-slate-950 font-black whitespace-nowrap transition">مباريات اليوم</button>
+        <button onclick="ktSetDay(1)" id="kt-day-1" class="kt-day-btn px-2.5 py-1 rounded-full text-white/90 hover:bg-white/15 font-bold whitespace-nowrap transition">غداً</button>
+      </div>
+      <div class="flex items-center gap-1.5 shrink-0">
+        <a href="index.html" class="px-3 py-1.5 rounded-full text-white/95 hover:bg-white/15 font-bold whitespace-nowrap transition">🏠 الرئيسية</a>
+        <a href="standings.html" class="px-3 py-1.5 rounded-full bg-white text-slate-950 font-black whitespace-nowrap shadow-sm">📊 الترتيب والهدافين</a>
+        <a href="news.html" class="px-3 py-1.5 rounded-full text-white/95 hover:bg-white/15 font-bold whitespace-nowrap transition">📰 أخبار الفرق</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Live Horizontal Match Ticker Strip -->
+  <div class="bg-slate-950/95 border-b border-slate-800">
+    <div class="max-w-5xl mx-auto px-3 sm:px-4 py-2 flex items-center gap-2">
+      <div id="kt-live-ticker" class="flex-1 flex items-center gap-2 overflow-x-auto pb-0.5" style="scrollbar-width:none;">
+        <div class="text-xs text-slate-400 py-1.5 px-2 whitespace-nowrap">جاري جلب المباريات المباشرة...</div>
+      </div>
+      <a href="index.html" class="hidden sm:flex items-center gap-1 px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-sky-400 text-xs font-bold whitespace-nowrap shrink-0">📅 جميع المباريات</a>
+    </div>
+  </div>
+</header>
+
+  <main class="max-w-5xl w-full mx-auto px-3 sm:px-4 py-5 space-y-5 flex-1">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div>
+        <h1 class="text-xl sm:text-2xl font-black text-white">📊 جداول ترتيب الدوريات والهدافين</h1>
+        <p class="text-xs sm:text-sm text-slate-400 mt-1">تحديث تلقائي مباشر لترتيب الأندية وقائمة الهدافين وصناع الأهداف.</p>
+      </div>
+      <div class="flex items-center gap-1.5 bg-slate-900 p-1 rounded-xl border border-slate-800 self-start">
+        <button onclick="switchMode('table')" id="md-table" class="px-3.5 py-1.5 rounded-lg text-xs font-black bg-emerald-500 text-slate-950">📊 الترتيب</button>
+        <button onclick="switchMode('scorers')" id="md-scorers" class="px-3.5 py-1.5 rounded-lg text-xs font-bold text-slate-300 hover:bg-slate-800">⚽ الهدافون</button>
+        <button onclick="switchMode('assists')" id="md-assists" class="px-3.5 py-1.5 rounded-lg text-xs font-bold text-slate-300 hover:bg-slate-800">🎯 صناعة الأهداف</button>
+      </div>
+    </div>
+
+    <!-- League Selector -->
+    <div id="league-tabs" class="flex items-center gap-2 overflow-x-auto pb-1">
+      <button onclick="selectLeague('eng.1')" data-lg="eng.1" class="lg-btn px-3.5 py-2 rounded-xl text-xs font-black bg-sky-500 text-white whitespace-nowrap">🏴󠁧󠁢󠁥󠁮󠁧󠁿 الدوري الإنجليزي</button>
+      <button onclick="selectLeague('esp.1')" data-lg="esp.1" class="lg-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 whitespace-nowrap">🇪🇸 الدوري الإسباني</button>
+      <button onclick="selectLeague('uefa.champions')" data-lg="uefa.champions" class="lg-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 whitespace-nowrap">🇪🇺 دوري أبطال أوروبا</button>
+      <button onclick="selectLeague('ita.1')" data-lg="ita.1" class="lg-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 whitespace-nowrap">🇮🇹 الدوري الإيطالي</button>
+      <button onclick="selectLeague('ger.1')" data-lg="ger.1" class="lg-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 whitespace-nowrap">🇩🇪 الدوري الألماني</button>
+      <button onclick="selectLeague('fra.1')" data-lg="fra.1" class="lg-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 whitespace-nowrap">🇫🇷 الدوري الفرنسي</button>
+      <button onclick="selectLeague('ksa.1')" data-lg="ksa.1" class="lg-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 whitespace-nowrap">🇸🇦 الدوري السعودي</button>
+    </div>
+
+    <!-- Content Box -->
+    <section id="st-content" class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+      <div class="p-10 text-center text-sm text-slate-400">جاري تحميل جدول الترتيب...</div>
+    </section>
+
+    <div class="flex flex-wrap items-center gap-4 text-[11px] text-slate-400 px-1">
+      <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-emerald-500"></span> تأهل أوروبي / صدارة</span>
+      <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-sky-500"></span> مقاعد قارية</span>
+      <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-red-500"></span> منطقة الهبوط</span>
+    </div>
+  </main>
+
+  <footer class="border-t border-slate-800 py-4 text-center text-xs text-slate-500">
+    © 2026 KORA TODAY — جميع الحقوق محفوظة
+  </footer>
+
+  <script src="live-ticker.js"></script>
+  <script>
+    var activeLg = 'eng.1';
+    var activeMode = 'table';
+    var tableCache = {};
+    var leadersCache = {};
+
+    function esc(s) {
+      return String(s || '').replace(/[&<>"']/g, function(m) {
+        return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];
+      });
+    }
+
+    function httpsUrl(u) {
+      return (u || '').replace(/^http:\/\//i, 'https://');
+    }
+
+    function statVal(entry, name) {
+      var s = (entry.stats || []).find(function(x) { return x.name === name; });
+      return s ? (s.displayValue !== undefined ? s.displayValue : s.value) : '0';
+    }
+
+    async function loadStandings(lg) {
+      var box = document.getElementById('st-content');
+      if (tableCache[lg]) {
+        renderStandings(tableCache[lg]);
+        return;
+      }
+      box.innerHTML = '<div class="p-10 text-center text-sm text-slate-400">جاري تحميل جدول الترتيب...</div>';
+      try {
+        var res = await fetch('https://site.api.espn.com/apis/v2/sports/soccer/' + lg + '/standings');
+        var data = await res.json();
+        var groups = [];
+        if (data.children && data.children.length) {
+          data.children.forEach(function(ch) {
+            if (ch.standings && ch.standings.entries && ch.standings.entries.length) {
+              groups.push({ name: ch.name || '', entries: ch.standings.entries });
+            }
+          });
+        } else if (data.standings && data.standings.entries) {
+          groups.push({ name: '', entries: data.standings.entries });
+        }
+        tableCache[lg] = groups;
+        renderStandings(groups);
+      } catch (e) {
+        box.innerHTML = '<div class="p-10 text-center text-sm text-red-400">تعذر تحميل الترتيب حالياً، حاول مرة أخرى.</div>';
+      }
+    }
+
+    function renderStandings(groups) {
+      var box = document.getElementById('st-content');
+      if (!groups || !groups.length) {
+        box.innerHTML = '<div class="p-10 text-center text-sm text-slate-400">جدول الترتيب غير متوفر حالياً لهذا الدوري.</div>';
+        return;
+      }
+      box.innerHTML = groups.map(function(g) {
+        var rows = g.entries.map(function(e, i) {
+          var rank = statVal(e, 'rank') || (i + 1);
+          var team = e.team || {};
+          var logo = (team.logos && team.logos[0] && team.logos[0].href) ? team.logos[0].href : '';
+          var noteColor = (e.note && e.note.color) ? e.note.color : '';
+          var barStyle = noteColor ? 'border-right:3px solid ' + noteColor + ';' : '';
+          var gd = statVal(e, 'pointDifferential');
+          var gdCls = String(gd).startsWith('-') ? 'text-red-400' : 'text-emerald-400';
+
+          return '<tr class="border-t border-slate-800/80 hover:bg-slate-800/40 transition" style="' + barStyle + '">' +
+            '<td class="py-2.5 px-2.5 text-center font-black text-xs text-slate-300">' + esc(rank) + '</td>' +
+            '<td class="py-2.5 px-2"><div class="flex items-center gap-2">' +
+              (logo ? '<img src="' + esc(logo) + '" class="w-5 h-5 object-contain shrink-0" loading="lazy" />' : '') +
+              '<span class="font-bold text-xs sm:text-sm text-white truncate max-w-[140px] sm:max-w-none">' + esc(team.displayName || team.shortDisplayName) + '</span>' +
+            '</div></td>' +
+            '<td class="py-2.5 px-2 text-center text-xs text-slate-300">' + esc(statVal(e, 'gamesPlayed')) + '</td>' +
+            '<td class="py-2.5 px-2 text-center text-xs text-emerald-400 font-bold">' + esc(statVal(e, 'wins')) + '</td>' +
+            '<td class="py-2.5 px-2 text-center text-xs text-slate-400">' + esc(statVal(e, 'ties')) + '</td>' +
+            '<td class="py-2.5 px-2 text-center text-xs text-red-400">' + esc(statVal(e, 'losses')) + '</td>' +
+            '<td class="py-2.5 px-2 text-center text-xs text-slate-400 hidden sm:table-cell">' + esc(statVal(e, 'pointsFor')) + ':' + esc(statVal(e, 'pointsAgainst')) + '</td>' +
+            '<td class="py-2.5 px-2 text-center text-xs font-bold ' + gdCls + '">' + esc(gd) + '</td>' +
+            '<td class="py-2.5 px-3 text-center text-sm font-black text-white bg-slate-800/40">' + esc(statVal(e, 'points')) + '</td>' +
+          '</tr>';
+        }).join('');
+
+        var headTitle = (groups.length > 1 && g.name) ? '<div class="px-4 py-2.5 bg-slate-800/70 text-xs font-black text-sky-400">' + esc(g.name) + '</div>' : '';
+        return headTitle + '<div class="overflow-x-auto"><table class="w-full text-right border-collapse">' +
+          '<thead class="bg-slate-950/60 text-[11px] text-slate-400 uppercase"><tr>' +
+            '<th class="py-2.5 px-2.5 text-center w-10">#</th>' +
+            '<th class="py-2.5 px-2">الفريق</th>' +
+            '<th class="py-2.5 px-2 text-center">لعب</th>' +
+            '<th class="py-2.5 px-2 text-center">فاز</th>' +
+            '<th class="py-2.5 px-2 text-center">تعادل</th>' +
+            '<th class="py-2.5 px-2 text-center">خسر</th>' +
+            '<th class="py-2.5 px-2 text-center hidden sm:table-cell">الأهداف</th>' +
+            '<th class="py-2.5 px-2 text-center">+/-</th>' +
+            '<th class="py-2.5 px-3 text-center text-emerald-400">نقاط</th>' +
+          '</tr></thead><tbody>' + rows + '</tbody></table></div>';
+      }).join('');
+    }
+
+    async function loadLeaders(lg, mode) {
+      var box = document.getElementById('st-content');
+      if (leadersCache[lg]) {
+        renderLeaders(leadersCache[lg], mode);
+        return;
+      }
+      box.innerHTML = '<div class="p-10 text-center text-sm text-slate-400">جاري تحميل قائمة الهدافين...</div>';
+      try {
+        var lgRes = await fetch('https://sports.core.api.espn.com/v2/sports/soccer/leagues/' + lg);
+        var lgData = await lgRes.json();
+        var sRef = lgData.season && lgData.season.$ref ? httpsUrl(lgData.season.$ref) : null;
+        if (!sRef) throw new Error('no season');
+
+        var sData = await (await fetch(sRef)).json();
+        var tRef = (sData.type && sData.type.$ref) ? httpsUrl(sData.type.$ref) : null;
+        if (!tRef) throw new Error('no type');
+
+        var tData = await (await fetch(tRef)).json();
+        var lRef = (tData.leaders && tData.leaders.$ref) ? httpsUrl(tData.leaders.$ref) : null;
+        if (!lRef) throw new Error('no leaders');
+
+        var lData = await (await fetch(lRef)).json();
+        var cats = lData.categories || [];
+
+        async function hydrateCategory(cat) {
+          if (!cat || !cat.leaders) return [];
+          var top = cat.leaders.slice(0, 15);
+          var hydrated = await Promise.all(top.map(async function(item) {
+            var aName = 'لاعب';
+            var tName = '';
+            var tLogo = '';
+            try {
+              if (item.athlete && item.athlete.$ref) {
+                var a = await (await fetch(httpsUrl(item.athlete.$ref))).json();
+                aName = a.displayName || a.fullName || aName;
+              }
+              if (item.team && item.team.$ref) {
+                var tm = await (await fetch(httpsUrl(item.team.$ref))).json();
+                tName = tm.shortDisplayName || tm.displayName || '';
+                tLogo = (tm.logos && tm.logos[0] && tm.logos[0].href) || '';
+              }
+            } catch (e) {}
+            return {
+              name: aName,
+              team: tName,
+              logo: tLogo,
+              val: item.displayValue || String(item.value || 0)
+            };
+          }));
+          return hydrated;
+        }
+
+        var goalCat = cats.find(function(c) { return /goal/i.test(c.name || c.displayName); }) || cats[0];
+        var assistCat = cats.find(function(c) { return /assist/i.test(c.name || c.displayName); }) || cats[1];
+
+        var both = await Promise.all([hydrateCategory(goalCat), hydrateCategory(assistCat)]);
+        leadersCache[lg] = { scorers: both[0], assists: both[1] };
+        renderLeaders(leadersCache[lg], mode);
+      } catch (e) {
+        box.innerHTML = '<div class="p-10 text-center text-sm text-slate-400">إحصائيات الهدافين غير متوفرة حالياً لهذا الدوري.</div>';
+      }
+    }
+
+    function renderLeaders(data, mode) {
+      var box = document.getElementById('st-content');
+      var list = (data && data[mode]) || [];
+      if (!list.length) {
+        box.innerHTML = '<div class="p-10 text-center text-sm text-slate-400">لا توجد بيانات هدافين متاحة حالياً لهذا الدوري.</div>';
+        return;
+      }
+      var colTitle = mode === 'assists' ? 'تمريرات حاسمة' : 'الأهداف';
+      var rows = list.map(function(p, idx) {
+        var medal = idx === 0 ? '🥇' : (idx === 1 ? '🥈' : (idx === 2 ? '🥉' : (idx + 1)));
+        return '<tr class="border-t border-slate-800/80 hover:bg-slate-800/40 transition">' +
+          '<td class="py-3 px-3 text-center font-black text-xs text-slate-300">' + medal + '</td>' +
+          '<td class="py-3 px-2 font-bold text-sm text-white">' + esc(p.name) + '</td>' +
+          '<td class="py-3 px-2"><div class="flex items-center gap-2">' +
+            (p.logo ? '<img src="' + esc(p.logo) + '" class="w-5 h-5 object-contain shrink-0" loading="lazy" />' : '') +
+            '<span class="text-xs text-slate-300">' + esc(p.team) + '</span>' +
+          '</div></td>' +
+          '<td class="py-3 px-4 text-center font-black text-base text-emerald-400 bg-slate-800/30">' + esc(p.val) + '</td>' +
+        '</tr>';
+      }).join('');
+
+      box.innerHTML = '<div class="overflow-x-auto"><table class="w-full text-right border-collapse">' +
+        '<thead class="bg-slate-950/60 text-[11px] text-slate-400"><tr>' +
+          '<th class="py-2.5 px-3 text-center w-12">#</th>' +
+          '<th class="py-2.5 px-2">اللاعب</th>' +
+          '<th class="py-2.5 px-2">الفريق</th>' +
+          '<th class="py-2.5 px-4 text-center text-emerald-400">' + colTitle + '</th>' +
+        '</tr></thead><tbody>' + rows + '</tbody></table></div>';
+    }
+
+    function refreshView() {
+      if (activeMode === 'table') loadStandings(activeLg);
+      else loadLeaders(activeLg, activeMode);
+    }
+
+    window.selectLeague = function(lg) {
+      activeLg = lg;
+      document.querySelectorAll('.lg-btn').forEach(function(b) {
+        var act = b.getAttribute('data-lg') === lg;
+        b.className = act
+          ? 'lg-btn px-3.5 py-2 rounded-xl text-xs font-black bg-sky-500 text-white whitespace-nowrap'
+          : 'lg-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 whitespace-nowrap';
+      });
+      refreshView();
+    };
+
+    window.switchMode = function(md) {
+      activeMode = md;
+      ['table', 'scorers', 'assists'].forEach(function(m) {
+        var b = document.getElementById('md-' + m);
+        if (b) b.className = (m === md)
+          ? 'px-3.5 py-1.5 rounded-lg text-xs font-black bg-emerald-500 text-slate-950'
+          : 'px-3.5 py-1.5 rounded-lg text-xs font-bold text-slate-300 hover:bg-slate-800';
+      });
+      refreshView();
+    };
+
+    refreshView();
+  </script>
+</body>
+</html>

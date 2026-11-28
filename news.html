@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>أخبار كرة القدم والفرق اليوم لحظة بلحظة | KORA TODAY</title>
+  <meta name="description" content="آخر أخبار ريال مدريد، برشلونة، ليفربول، آرسنال، الوداد، الرجاء، المنتخب المغربي، والدوريات الأوروبية والعربية محدثة تلقائياً على كورة توداي." />
+  <link rel="canonical" href="https://koratoday.xyz/news.html" />
+  <link rel="icon" href="favicon.png" type="image/png" />
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-REBZQPV4BQ"></script>
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-REBZQPV4BQ');</script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script data-cfasync="false" src="https://capitalhospitals.org/1/81bc042dbb6306e6db561bfaf73fd14c"></script>
+  <script async="async" data-cfasync="false" src="https://czernik.org/21/e7ca79a9188232a1a0ad2aca769793dd"></script>
+  <script data-cfasync="false" src="https://czernik.org/14/0397d013c9111bdd099bca6620eb6f54"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans">
+<header class="sticky top-0 z-50 shadow-xl">
+  <!-- Top Bar (Logo + League Flags + Live Pill) -->
+  <div class="bg-slate-900/95 backdrop-blur border-b border-slate-800">
+    <div class="max-w-5xl mx-auto px-3 sm:px-4 py-2.5 flex items-center justify-between gap-2">
+      <a href="index.html" class="flex items-center gap-2 shrink-0">
+        <img src="favicon.png" alt="KORA TODAY" class="w-8 h-8 rounded-lg object-cover" />
+        <span class="text-lg sm:text-xl font-black tracking-tight text-emerald-400">KORA TODAY</span>
+      </a>
+      <div class="flex items-center gap-1.5 sm:gap-2 overflow-x-auto">
+        <button onclick="ktFilterLeague('all')" title="جميع الدوريات" class="kt-flag-btn w-7 h-7 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-sm border border-emerald-500/60 shrink-0" data-lg="all">🌍</button>
+        <button onclick="ktFilterLeague('eng.1')" title="الدوري الإنجليزي" class="kt-flag-btn w-7 h-7 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-sm border border-slate-700 shrink-0" data-lg="eng.1">🏴󠁧󠁢󠁥󠁮󠁧󠁿</button>
+        <button onclick="ktFilterLeague('esp.1')" title="الدوري الإسباني" class="kt-flag-btn w-7 h-7 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-sm border border-slate-700 shrink-0" data-lg="esp.1">🇪🇸</button>
+        <button onclick="ktFilterLeague('uefa.champions')" title="دوري أبطال أوروبا" class="kt-flag-btn w-7 h-7 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-sm border border-slate-700 shrink-0" data-lg="uefa.champions">🇪🇺</button>
+        <button onclick="ktFilterLeague('ksa.1')" title="الدوري السعودي" class="kt-flag-btn w-7 h-7 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-sm border border-slate-700 shrink-0" data-lg="ksa.1">🇸🇦</button>
+        <button onclick="ktFilterLeague('ita.1')" title="الدوري الإيطالي" class="kt-flag-btn w-7 h-7 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-sm border border-slate-700 shrink-0" data-lg="ita.1">🇮🇹</button>
+        <button onclick="ktToggleLiveOnly()" id="kt-live-pill" class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500/15 hover:bg-red-500/25 border border-red-500/40 text-red-400 text-xs font-black shrink-0 transition">
+          <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+          <span>مباشر</span>
+          <span id="kt-live-num" class="bg-red-500 text-white text-[10px] px-1.5 rounded-full hidden">0</span>
+        </button>
+        <span id="live-count" class="hidden sm:inline-block text-[11px] bg-slate-800 px-2.5 py-1 rounded-full text-slate-300 shrink-0">محدث لايف</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Navigation Bar -->
+  <nav class="bg-gradient-to-l from-sky-600 via-cyan-600 to-emerald-600">
+    <div class="max-w-5xl mx-auto px-3 sm:px-4 py-2 flex items-center justify-between gap-2 overflow-x-auto text-xs">
+      <div class="flex items-center gap-1 bg-black/20 p-1 rounded-full shrink-0">
+        <button onclick="ktSetDay(-1)" id="kt-day--1" class="kt-day-btn px-2.5 py-1 rounded-full text-white/90 hover:bg-white/15 font-bold whitespace-nowrap transition">أمس</button>
+        <button onclick="ktSetDay(0)" id="kt-day-0" class="kt-day-btn px-3 py-1 rounded-full bg-white text-slate-950 font-black whitespace-nowrap transition">مباريات اليوم</button>
+        <button onclick="ktSetDay(1)" id="kt-day-1" class="kt-day-btn px-2.5 py-1 rounded-full text-white/90 hover:bg-white/15 font-bold whitespace-nowrap transition">غداً</button>
+      </div>
+      <div class="flex items-center gap-1.5 shrink-0">
+        <a href="index.html" class="px-3 py-1.5 rounded-full text-white/95 hover:bg-white/15 font-bold whitespace-nowrap transition">🏠 الرئيسية</a>
+        <a href="standings.html" class="px-3 py-1.5 rounded-full text-white/95 hover:bg-white/15 font-bold whitespace-nowrap transition">📊 الترتيب والهدافين</a>
+        <a href="news.html" class="px-3 py-1.5 rounded-full bg-white text-slate-950 font-black whitespace-nowrap shadow-sm">📰 أخبار الفرق</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Live Horizontal Match Ticker Strip -->
+  <div class="bg-slate-950/95 border-b border-slate-800">
+    <div class="max-w-5xl mx-auto px-3 sm:px-4 py-2 flex items-center gap-2">
+      <div id="kt-live-ticker" class="flex-1 flex items-center gap-2 overflow-x-auto pb-0.5" style="scrollbar-width:none;">
+        <div class="text-xs text-slate-400 py-1.5 px-2 whitespace-nowrap">جاري جلب المباريات المباشرة...</div>
+      </div>
+      <a href="index.html" class="hidden sm:flex items-center gap-1 px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-sky-400 text-xs font-bold whitespace-nowrap shrink-0">📅 جميع المباريات</a>
+    </div>
+  </div>
+</header>
+
+  <main class="max-w-5xl w-full mx-auto px-3 sm:px-4 py-5 space-y-5 flex-1">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div>
+        <h1 class="text-xl sm:text-2xl font-black text-white">📰 أخبار الفرق والكرة العالمية</h1>
+        <p class="text-xs sm:text-sm text-slate-400 mt-1">أحدث أخبار الأندية والانتقالات والكرة المغربية والعالمية محدثة تلقائياً.</p>
+      </div>
+      <input id="nw-search" oninput="renderNews()" type="search" placeholder="ابحث عن فريق أو لاعب..." class="bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 sm:w-64" />
+    </div>
+
+    <!-- Team Quick Filter Chips -->
+    <div id="team-chips" class="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+      <button onclick="setTeam('')" class="tm-btn px-3 py-1.5 rounded-full font-black bg-emerald-500 text-slate-950 whitespace-nowrap" data-tm="">🔥 كل الأخبار</button>
+      <button onclick="setTeam('ريال مدريد|مدريد|Real Madrid')" class="tm-btn px-3 py-1.5 rounded-full font-bold bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 whitespace-nowrap" data-tm="ريال مدريد|مدريد|Real Madrid">ريال مدريد</button>
+      <button onclick="setTeam('برشلونة|البارسا|Barcelona')" class="tm-btn px-3 py-1.5 rounded-full font-bold bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 whitespace-nowrap" data-tm="برشلونة|البارسا|Barcelona">برشلونة</button>
+      <button onclick="setTeam('ليفربول|Liverpool')" class="tm-btn px-3 py-1.5 rounded-full font-bold bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 whitespace-nowrap" data-tm="ليفربول|Liverpool">ليفربول</button>
+      <button onclick="setTeam('آرسنال|أرسنال|Arsenal')" class="tm-btn px-3 py-1.5 rounded-full font-bold bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 whitespace-nowrap" data-tm="آرسنال|أرسنال|Arsenal">آرسنال</button>
+      <button onclick="setTeam('مانشستر|سيتي|يونايتد|Manchester')" class="tm-btn px-3 py-1.5 rounded-full font-bold bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 whitespace-nowrap" data-tm="مانشستر|سيتي|يونايتد|Manchester">مانشستر</button>
+      <button onclick="setTeam('تشيلسي|تشلسي|Chelsea')" class="tm-btn px-3 py-1.5 rounded-full font-bold bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 whitespace-nowrap" data-tm="تشيلسي|تشلسي|Chelsea">تشيلسي</button>
+      <button onclick="setTeam('الوداد|الرجاء|المغرب|الأسود|البطولة')" class="tm-btn px-3 py-1.5 rounded-full font-bold bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 whitespace-nowrap" data-tm="الوداد|الرجاء|المغرب|الأسود|البطولة">🇲🇦 كرة مغربية</button>
+      <button onclick="setTeam('الهلال|النصر|الاتحاد|السعودي')" class="tm-btn px-3 py-1.5 rounded-full font-bold bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 whitespace-nowrap" data-tm="الهلال|النصر|الاتحاد|السعودي">🇸🇦 الدوري السعودي</button>
+      <button onclick="setTeam('أبطال أوروبا|Champions')" class="tm-btn px-3 py-1.5 rounded-full font-bold bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 whitespace-nowrap" data-tm="أبطال أوروبا|Champions">🇪🇺 أبطال أوروبا</button>
+    </div>
+
+    <!-- News Grid -->
+    <section id="news-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div class="col-span-full text-center py-12 text-slate-400 text-sm">جاري جلب آخر الأخبار الرياضية...</div>
+    </section>
+  </main>
+
+  <!-- In-Site Article Reader Modal -->
+  <div id="nw-modal" onclick="if(event.target===this)closeModal()" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto shadow-2xl">
+      <div class="sticky top-0 bg-slate-900/95 border-b border-slate-800 px-4 py-3 flex items-center justify-between gap-2">
+        <span id="md-src" class="text-xs font-bold text-emerald-400"></span>
+        <button onclick="closeModal()" class="text-xs bg-red-500/20 text-red-400 px-3 py-1 rounded-lg hover:bg-red-500/30 font-bold">إغلاق ✕</button>
+      </div>
+      <div id="md-img-wrap" class="aspect-video bg-black overflow-hidden hidden">
+        <img id="md-img" src="" alt="" class="w-full h-full object-cover" />
+      </div>
+      <div class="p-5 space-y-3">
+        <h2 id="md-title" class="text-lg font-black text-white leading-snug"></h2>
+        <div id="md-date" class="text-xs text-slate-400"></div>
+        <p id="md-desc" class="text-sm text-slate-200 leading-relaxed whitespace-pre-line"></p>
+        <div class="pt-3 border-t border-slate-800">
+          <a id="md-link" href="#" target="_blank" rel="noopener noreferrer" class="inline-block px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-white font-bold text-xs">قراءة المقال كاملاً من المصدر ↗</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="border-t border-slate-800 py-4 text-center text-xs text-slate-500">
+    © 2026 KORA TODAY — جميع الحقوق محفوظة
+  </footer>
+
+  <script src="live-ticker.js"></script>
+  <script>
+    var allNews = [];
+    var activeTeam = '';
+
+    function esc(s) {
+      return String(s || '').replace(/[&<>"']/g, function(m) {
+        return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];
+      });
+    }
+
+    function stripHtml(html) {
+      var d = document.createElement('div');
+      d.innerHTML = html || '';
+      return (d.textContent || d.innerText || '').trim();
+    }
+
+    function fmtDate(dStr) {
+      try {
+        var d = new Date(dStr);
+        if (isNaN(d.getTime())) return '';
+        return d.toLocaleDateString('ar-MA', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+      } catch (e) {
+        return '';
+      }
+    }
+
+    async function fetchArabicFeeds() {
+      var feeds = [
+        { name: 'هسبريس الرياضية', url: 'https://www.hespress.com/sport/feed' },
+        { name: 'فرانس 24 رياضة', url: 'https://www.france24.com/ar/%D8%B1%D9%8A%D8%A7%D8%B6%D8%A9/rss' },
+        { name: 'بي بي سي رياضة', url: 'https://feeds.bbci.co.uk/arabic/sports/rss.xml' },
+        { name: 'سكاي نيوز عربية', url: 'https://www.skynewsarabia.com/rss/sport' }
+      ];
+      var results = await Promise.allSettled(feeds.map(async function(f) {
+        var r = await fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(f.url));
+        var data = await r.json();
+        if (data.status !== 'ok') return [];
+        return (data.items || []).map(function(it) {
+          var img = it.thumbnail || (it.enclosure && it.enclosure.link) || '';
+          if (!img && it.description) {
+            var m = it.description.match(/<img[^>]+src=["']([^"']+)["']/i);
+            if (m) img = m[1];
+          }
+          return {
+            title: stripHtml(it.title),
+            desc: stripHtml(it.description || it.content || ''),
+            img: img,
+            link: it.link,
+            date: it.pubDate,
+            ts: new Date(it.pubDate || 0).getTime() || 0,
+            source: f.name
+          };
+        });
+      }));
+
+      var items = [];
+      results.forEach(function(r) {
+        if (r.status === 'fulfilled' && Array.isArray(r.value)) items = items.concat(r.value);
+      });
+      return items;
+    }
+
+    async function fetchEspnFallback() {
+      var leagues = ['eng.1', 'esp.1', 'uefa.champions'];
+      var results = await Promise.allSettled(leagues.map(async function(lg) {
+        var r = await fetch('https://site.api.espn.com/apis/site/v2/sports/soccer/' + lg + '/news?limit=8');
+        var data = await r.json();
+        return (data.articles || []).map(function(a) {
+          return {
+            title: a.headline || '',
+            desc: a.description || '',
+            img: (a.images && a.images[0] && a.images[0].url) || '',
+            link: (a.links && a.links.web && a.links.web.href) || '#',
+            date: a.published || '',
+            ts: new Date(a.published || 0).getTime() || 0,
+            source: 'ESPN Football'
+          };
+        });
+      }));
+      var items = [];
+      results.forEach(function(r) {
+        if (r.status === 'fulfilled' && Array.isArray(r.value)) items = items.concat(r.value);
+      });
+      return items;
+    }
+
+    function openModal(idx) {
+      var list = getFiltered();
+      var item = list[idx];
+      if (!item) return;
+      document.getElementById('md-src').textContent = item.source;
+      document.getElementById('md-title').textContent = item.title;
+      document.getElementById('md-date').textContent = fmtDate(item.date);
+      document.getElementById('md-desc').textContent = item.desc || item.title;
+      document.getElementById('md-link').href = item.link;
+      var imgWrap = document.getElementById('md-img-wrap');
+      if (item.img) {
+        document.getElementById('md-img').src = item.img;
+        imgWrap.classList.remove('hidden');
+      } else {
+        imgWrap.classList.add('hidden');
+      }
+      document.getElementById('nw-modal').classList.remove('hidden');
+    }
+
+    window.closeModal = function() {
+      document.getElementById('nw-modal').classList.add('hidden');
+    };
+    window.openModal = openModal;
+
+    function getFiltered() {
+      var q = (document.getElementById('nw-search').value || '').trim().toLowerCase();
+      return allNews.filter(function(n) {
+        var hay = (n.title + ' ' + n.desc + ' ' + n.source).toLowerCase();
+        if (activeTeam) {
+          var terms = activeTeam.toLowerCase().split('|');
+          if (!terms.some(function(t) { return hay.indexOf(t) !== -1; })) return false;
+        }
+        if (q && hay.indexOf(q) === -1) return false;
+        return true;
+      });
+    }
+
+    window.setTeam = function(tm) {
+      activeTeam = tm;
+      document.querySelectorAll('.tm-btn').forEach(function(b) {
+        var act = b.getAttribute('data-tm') === tm;
+        b.className = act
+          ? 'tm-btn px-3 py-1.5 rounded-full font-black bg-emerald-500 text-slate-950 whitespace-nowrap'
+          : 'tm-btn px-3 py-1.5 rounded-full font-bold bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 whitespace-nowrap';
+      });
+      renderNews();
+    };
+
+    function renderNews() {
+      var grid = document.getElementById('news-grid');
+      var list = getFiltered();
+      if (!list.length) {
+        grid.innerHTML = '<div class="col-span-full bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center text-sm text-slate-400">لا توجد أخبار مطابقة لهذا الفريق حالياً. جرب "كل الأخبار" أو ابحث بكلمة أخرى.</div>';
+        return;
+      }
+      grid.innerHTML = list.slice(0, 36).map(function(n, idx) {
+        var imgHtml = n.img
+          ? '<div class="aspect-video bg-slate-950 overflow-hidden"><img src="' + esc(n.img) + '" alt="' + esc(n.title) + '" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" /></div>'
+          : '<div class="aspect-video bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center text-3xl">⚽</div>';
+        return '<article onclick="openModal(' + idx + ')" class="group cursor-pointer bg-slate-900 hover:bg-slate-800/80 border border-slate-800 hover:border-sky-500/50 rounded-2xl overflow-hidden transition flex flex-col">' +
+          imgHtml +
+          '<div class="p-4 flex-1 flex flex-col justify-between gap-2.5">' +
+            '<div class="space-y-1.5">' +
+              '<div class="flex items-center justify-between gap-2 text-[11px]"><span class="font-bold text-emerald-400">' + esc(n.source) + '</span><span class="text-slate-500">' + esc(fmtDate(n.date)) + '</span></div>' +
+              '<h2 class="font-bold text-sm text-white leading-snug line-clamp-2">' + esc(n.title) + '</h2>' +
+              '<p class="text-xs text-slate-400 line-clamp-2 leading-relaxed">' + esc(n.desc) + '</p>' +
+            '</div>' +
+            '<div class="text-[11px] font-bold text-sky-400 pt-2 border-t border-slate-800/80">اقرأ التفاصيل ←</div>' +
+          '</div></article>';
+      }).join('');
+    }
+    window.renderNews = renderNews;
+
+    (async function init() {
+      var ar = await fetchArabicFeeds();
+      var items = ar.length >= 6 ? ar : ar.concat(await fetchEspnFallback());
+      var seen = {};
+      allNews = items.filter(function(it) {
+        if (!it.title || seen[it.title]) return false;
+        seen[it.title] = true;
+        return true;
+      }).sort(function(a, b) { return b.ts - a.ts; });
+      renderNews();
+    })();
+  </script>
+</body>
+</html>
