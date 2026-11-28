@@ -175,8 +175,9 @@ document.addEventListener('paste', function(e) {
 });
 </script>
 
+
 <!-- KT-DELETE-MANAGER-START -->
-<section id="kt-delete-manager" dir="rtl" style="max-width:900px;margin:24px auto;padding:18px;background:#0f172a;border:1px solid #1e293b;border-radius:16px;color:#f1f5f9;font-family:system-ui,-apple-system,sans-serif;">
+<section id="kt-delete-manager" dir="rtl" style="display:none;max-width:900px;margin:24px auto;padding:18px;background:#0f172a;border:1px solid #1e293b;border-radius:16px;color:#f1f5f9;font-family:system-ui,-apple-system,sans-serif;">
   <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;">
     <div>
       <h2 style="margin:0;font-size:18px;font-weight:900;color:#f87171;">🗑️ إدارة وحذف المباريات</h2>
@@ -200,7 +201,9 @@ document.addEventListener('paste', function(e) {
   var sb = window.supabase.createClient('https://uwyljkxcfcqmteltjzxu.supabase.co', 'sb_publishable_5E_ajIPbGSP0Kx9a_LJJXQ_xiG4Jahx');
   var rows = [];
   var selectedIds = new Set();
+  var isUnlocked = false;
 
+  var boxEl = document.getElementById('kt-delete-manager');
   var listEl = document.getElementById('kt-del-list');
   var statusEl = document.getElementById('kt-del-status');
   var msgEl = document.getElementById('kt-del-msg');
@@ -291,6 +294,7 @@ document.addEventListener('paste', function(e) {
   }
 
   async function loadMatches() {
+    if (!isUnlocked) return;
     statusEl.textContent = 'جاري التحديث...';
     var res = await sb.from('matches').select('*').order('id', { ascending: false });
     if (res.error) {
@@ -304,6 +308,11 @@ document.addEventListener('paste', function(e) {
 
   async function deleteIds(ids) {
     if (!ids.length) return;
+    var sRes = await sb.auth.getSession();
+    if (!sRes.data || !sRes.data.session) {
+      lockPanel();
+      return;
+    }
     var ok = confirm('واش متأكد بغيتي تمسح ' + (ids.length === 1 ? 'هاد المباراة؟' : ids.length + ' مباريات؟'));
     if (!ok) return;
 
@@ -313,11 +322,36 @@ document.addEventListener('paste', function(e) {
       return;
     }
     if (!res.data || !res.data.length) {
-      showMsg('⚠️ Supabase مانع الحذف (RLS Policy) — دوز كود SQL ديال الصلاحية فـ Supabase SQL Editor وعاود جرّب.', true);
+      showMsg('⚠️ تأكد أنك دوزتي كود SQL ديال الصلاحية فـ Supabase وأنك مسجل الدخول.', true);
       return;
     }
     showMsg('✅ تم حذف ' + res.data.length + ' مباراة بنجاح!', false);
     await loadMatches();
+  }
+
+  function unlockPanel() {
+    if (isUnlocked) return;
+    isUnlocked = true;
+    boxEl.style.display = 'block';
+    loadMatches();
+  }
+
+  function lockPanel() {
+    isUnlocked = false;
+    rows = [];
+    selectedIds.clear();
+    listEl.innerHTML = '';
+    boxEl.style.display = 'none';
+  }
+
+  async function syncAuthState() {
+    try {
+      var res = await sb.auth.getSession();
+      if (res.data && res.data.session) unlockPanel();
+      else lockPanel();
+    } catch (e) {
+      lockPanel();
+    }
   }
 
   searchEl.oninput = render;
@@ -331,7 +365,24 @@ document.addEventListener('paste', function(e) {
   };
   btnBulk.onclick = function() { deleteIds(Array.from(selectedIds)); };
 
-  loadMatches();
+  sb.auth.onAuthStateChange(function(_event, session) {
+    if (session) unlockPanel();
+    else lockPanel();
+  });
+
+  // Sync automatically right after clicking login/logout in the main admin form
+  document.addEventListener('click', function(e) {
+    if (e.target && e.target.closest && e.target.closest('button')) {
+      setTimeout(syncAuthState, 600);
+      setTimeout(syncAuthState, 1600);
+    }
+  });
+  document.addEventListener('submit', function() {
+    setTimeout(syncAuthState, 600);
+    setTimeout(syncAuthState, 1600);
+  });
+
+  syncAuthState();
 })();
 </script>
 <!-- KT-DELETE-MANAGER-END -->
