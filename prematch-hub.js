@@ -16,9 +16,9 @@
       '.kt-pitch-box-top{position:absolute;top:0;left:50%;transform:translateX(-50%);width:48%;height:42px;border:1px solid rgba(255,255,255,.22);border-top:none;pointer-events:none;}' +
       '.kt-pitch-box-bot{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:48%;height:42px;border:1px solid rgba(255,255,255,.22);border-bottom:none;pointer-events:none;}' +
       '.kt-pitch-row{position:relative;z-index:2;display:flex;justify-content:space-around;align-items:center;gap:4px;}' +
-      '.kt-player{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:54px;max-width:78px;}' +
+      '.kt-player{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:44px;max-width:68px;}' +
       '.kt-jersey{width:30px;height:30px;border-radius:9999px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;border:2px solid #fff;box-shadow:0 3px 8px rgba(0,0,0,.45);}' +
-      '.kt-pname{background:rgba(2,6,23,.82);color:#f8fafc;font-size:10px;font-weight:700;padding:1px 6px;border-radius:6px;max-width:76px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;}' +
+      '.kt-pname{background:rgba(2,6,23,.82);color:#f8fafc;font-size:10px;font-weight:700;padding:1px 6px;border-radius:6px;max-width:66px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;}' +
       '.kt-form-pill{width:22px;height:22px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;}';
     document.head.appendChild(st);
   }
@@ -390,14 +390,14 @@
     container.innerHTML =
       '<div class="space-y-3" dir="rtl">' +
         cdBanner +
-        '<div class="flex items-center justify-between gap-2 flex-wrap">' +
-          '<div class="flex items-center gap-1.5 overflow-x-auto pb-0.5">' +
-            '<button type="button" data-tab="pitch" class="kth-tab px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap">🏟️ الخطة والتشكيلة</button>' +
-            '<button type="button" data-tab="info" class="kth-tab px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap">📋 معلومات والمواجهات</button>' +
-            '<button type="button" data-tab="events" class="kth-tab px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap">⚽ الأحداث</button>' +
-            '<button type="button" data-tab="stats" class="kth-tab px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap">📊 الإحصائيات</button>' +
+        '<div class="space-y-2">' +
+          '<div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-1.5 w-full">' +
+            '<button type="button" data-tab="pitch" class="kth-tab px-2.5 py-2 rounded-xl text-xs font-bold text-center">🏟️ الخطة والتشكيلة</button>' +
+            '<button type="button" data-tab="info" class="kth-tab px-2.5 py-2 rounded-xl text-xs font-bold text-center">📋 معلومات والمواجهات</button>' +
+            '<button type="button" data-tab="events" class="kth-tab px-2.5 py-2 rounded-xl text-xs font-bold text-center">⚽ الأحداث</button>' +
+            '<button type="button" data-tab="stats" class="kth-tab px-2.5 py-2 rounded-xl text-xs font-bold text-center">📊 الإحصائيات</button>' +
           '</div>' +
-          (opts.showWatchBtn ? '<a href="index.html" onclick="ktClosePreMatch()" class="px-3 py-1.5 rounded-lg text-xs font-black bg-red-600 hover:bg-red-500 text-white whitespace-nowrap">📺 البث المباشر</a>' : '') +
+          (opts.showWatchBtn ? '<a href="index.html" onclick="ktClosePreMatch()" class="block w-full sm:w-auto text-center px-3 py-2 rounded-xl text-xs font-black bg-red-600 hover:bg-red-500 text-white">📺 الانتقال إلى البث المباشر</a>' : '') +
         '</div>' +
         '<div id="' + uid + '_body"></div>' +
       '</div>';
@@ -408,8 +408,8 @@
       container.querySelectorAll('.kth-tab').forEach(function(b) {
         var act = b.getAttribute('data-tab') === activeTab;
         b.className = act
-          ? 'kth-tab px-3 py-1.5 rounded-lg text-xs font-black bg-emerald-500 text-slate-950 whitespace-nowrap'
-          : 'kth-tab px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 whitespace-nowrap';
+          ? 'kth-tab px-2.5 py-2 rounded-xl text-xs font-black bg-emerald-500 text-slate-950 text-center'
+          : 'kth-tab px-2.5 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 text-center';
       });
       var body = document.getElementById(uid + '_body');
       if (!body) return;
@@ -457,13 +457,13 @@
     wrap.className = 'hidden fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4';
     wrap.onclick = function(e) { if (e.target === wrap) ktClosePreMatch(); };
     wrap.innerHTML =
-      '<div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl text-slate-100">' +
+      '<div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-2xl w-full max-h-[85dvh] flex flex-col overflow-hidden shadow-2xl text-slate-100">' +
         '<div class="px-4 py-3 bg-slate-950/90 border-b border-slate-800 flex items-center justify-between gap-2">' +
           '<span id="ktpm-league" class="text-xs font-black text-sky-400">مركز المباراة</span>' +
           '<button type="button" onclick="ktClosePreMatch()" class="text-xs bg-red-500/20 text-red-400 hover:bg-red-500/30 px-2.5 py-1 rounded-lg font-bold">إغلاق ✕</button>' +
         '</div>' +
         '<div id="ktpm-score" class="px-4 py-3.5 bg-gradient-to-b from-slate-900 to-slate-950 border-b border-slate-800"></div>' +
-        '<div id="ktpm-content" class="p-4 overflow-y-auto flex-1"></div>' +
+        '<div id="ktpm-content" class="p-3 sm:p-4 overflow-y-auto flex-1 min-h-0" style="-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-y;"></div>' +
       '</div>';
     document.body.appendChild(wrap);
     document.addEventListener('keydown', function(e) { if (e.key === 'Escape') ktClosePreMatch(); });

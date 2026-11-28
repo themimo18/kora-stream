@@ -1,4 +1,13 @@
 (function() {
+  if (!document.getElementById('kt-mobile-scroll-css')) {
+    var ms = document.createElement('style');
+    ms.id = 'kt-mobile-scroll-css';
+    ms.textContent =
+      'html,body{max-width:100%;overflow-x:clip;}' +
+      '#kt-live-ticker,#league-tabs,#team-chips{min-width:0!important;max-width:100%;-webkit-overflow-scrolling:touch;touch-action:pan-x;scrollbar-width:none;}' +
+      '#kt-live-ticker::-webkit-scrollbar,#league-tabs::-webkit-scrollbar,#team-chips::-webkit-scrollbar{display:none;}';
+    document.head.appendChild(ms);
+  }
   var LEAGUES = [
     { id: 'eng.1', name: 'الدوري الإنجليزي' },
     { id: 'esp.1', name: 'الدوري الإسباني' },
